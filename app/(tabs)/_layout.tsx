@@ -27,7 +27,7 @@ export default function TabLayout() {
         headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
-        name="landing"
+        name="landingTab"
         options={{
           title: 'Landing',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
@@ -48,28 +48,28 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="torneos"
+        name="torneoTab"
         options={{
           title: 'Torneos',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
        <Tabs.Screen
-        name="ranking"
+        name="rankingTab"
         options={{
           title: 'Ranking',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
        <Tabs.Screen
-        name="partidos"
+        name="partidosTab"
         options={{
           title: 'Partidos',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="perfil"
+        name="perfilTab"
         options={{
           title: 'Perfil',
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,

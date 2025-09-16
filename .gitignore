@@ -5,6 +5,7 @@ node_modules/
 
 # Expo
 .expo/
+.expo_shared/
 dist/
 web-build/
 expo-env.d.ts
@@ -35,3 +36,12 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# build outputs
+android/
+ios/
+web-build/
+
+# OS
+.DS_Store
+Thumbs.db
