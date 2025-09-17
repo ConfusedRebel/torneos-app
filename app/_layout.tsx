@@ -55,6 +55,7 @@ function RootLayoutNav() {
        <TorneosProvider>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="config" options={{ title: 'Configuración' }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         </Stack>
       </TorneosProvider>

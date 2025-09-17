@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { View, Text } from '@/components/Themed';
 import type { Torneo } from './../types/torneo';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/hooks/useTheme';
 
 type Props = {
   torneo: Torneo;
@@ -10,22 +10,27 @@ type Props = {
   style?: ViewStyle;
 };
 
-const { light, dark } = Colors;
-
 function TorneoCardBase({ torneo, onPress, style }: Props) {
+  const { colors } = useTheme();
+
   return (
     <Pressable
       onPress={() => onPress?.(torneo.id)}
-      android_ripple={{ borderless: false }}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed, style]}
+      android_ripple={{ borderless: false, color: colors.border }}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: colors.card, shadowColor: colors.border },
+        pressed && styles.pressed,
+        style,
+      ]}
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={`Abrir ${torneo.name}`}
     >
       <View>
-        <Text style={styles.cardTitle}>{torneo.name}</Text>
-        <Text style={styles.cardSubtitle}>{torneo.date}</Text>
-        <Text style={styles.cardSubtitle}>{torneo.location}</Text>
+        <Text style={[styles.cardTitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.name}</Text>
+        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.date}</Text>
+        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.location}</Text>
       </View>
     </Pressable>
   );
@@ -35,17 +40,15 @@ export const TorneoCard = memo(TorneoCardBase);
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: dark.middle,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     elevation: 3,
-    shadowColor: dark.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 3,
   },
   pressed: { opacity: 0.9 },
-  cardTitle: { fontSize: 18, fontWeight: 'bold', backgroundColor: dark.middle, color: dark.text },
-  cardSubtitle: { fontSize: 14, backgroundColor: dark.middle, color: dark.text  },
+  cardTitle: { fontSize: 18, fontWeight: 'bold' },
+  cardSubtitle: { fontSize: 14, marginTop: 4 },
 });

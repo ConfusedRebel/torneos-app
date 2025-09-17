@@ -1,14 +1,15 @@
 import { StyleSheet } from 'react-native';
-
-import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function TabOneScreen() {
+  const { colors } = useTheme();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+      <Text style={[styles.title, { color: colors.text }]}>Tab One</Text>
+      <View style={[styles.separator, { backgroundColor: colors.border }]} />
+      <Text style={{ color: colors.text }}>Espacio para las noticias</Text>
     </View>
   );
 }
