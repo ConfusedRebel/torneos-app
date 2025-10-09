@@ -1,8 +1,8 @@
 import { StyleSheet, Image, FlatList, View as RNView } from 'react-native';
 
 import { Text, View } from '@/components/Themed';
-import { Player } from '@/types/player';
-import { Partido } from '@/types/partido';
+import { Player } from '@/types/jugador';
+import { Partido } from '@/types/partidoSingle';
 import { PartidoCard } from '@/components/partidoCard';
 import { useTheme } from '@/hooks/useTheme';
 import image from '@/assets/images/favicon.png';

@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { StyleSheet, ViewStyle } from 'react-native';
 import { View, Text } from '@/components/Themed';
-import type { Partido } from './../types/partido';
+import type { Partido } from '../types/partidoSingle';
 import { useTheme } from '@/hooks/useTheme';
 
 type Props = {

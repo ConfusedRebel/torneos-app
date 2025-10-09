@@ -1,7 +1,12 @@
 export type Torneo = {
-  id: string;
-  name: string;
-  date: string;      // ISO
-  location: string;
-  // add optional fields any time: status?: 'open' | 'closed', price?: number, etc.
+  id: number;
+
+  //Datos torneo
+  nombre: string;
+  fecha: string;      // ISO
+  ubicacion: string;
+  deporte: string;
+  duo: boolean;
+  estado: 'Activo' | 'Finalizado' | 'Cancelado';
+
 };

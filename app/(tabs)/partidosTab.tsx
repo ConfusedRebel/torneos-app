@@ -1,7 +1,7 @@
 import { StyleSheet, FlatList } from 'react-native';
 
 import { Text, View } from '@/components/Themed';
-import { Partido } from '@/types/partido';
+import { Partido } from '@/types/partidoSingle';
 import { PartidoCard } from '@/components/partidoCard';
 
 // Datos de ejemplo

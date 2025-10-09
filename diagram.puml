@@ -1,0 +1,88 @@
+@startuml Entity_Relationship_Diagram
+
+'Alt + D para mostrar diagrama entidad relacion utilizando "plantuml"
+
+'|##############################################################|
+'|###                        Entities                        ###|
+'|##############################################################|
+
+entity "Jugador" as Jugador {
+  *id_jugador : int
+  --
+  nombre : string
+  edad: int
+  apellido : string
+  email : string
+  rankingPaddle : int
+  rankingTennis : int
+  categoría : string
+}
+
+entity "Administrador" as Admin {
+  *id_administrador : int
+  --
+  nombre : string
+  email : string
+  contraseña : string
+}
+
+entity "Torneo" as Torneo {
+  *id_torneo : int
+  --
+  nombre : string
+  deporte: string
+  duo : bool  
+  fecha_inicio : date
+  fecha_fin : date
+  ubicación : string
+  estado : 3-state-bool
+}
+
+entity "Partido" as Partido {
+  *id_partido : int
+  --
+  fecha : date
+  hora : time
+  fase : string
+  resultado : string
+  -- Foreign Keys --
+  id_torneo : int
+}
+
+
+'|###################################################################|
+'|###                        Linking Table                        ###|
+'|###################################################################|
+
+entity "Participacion" as Participacion {
+  *id_participacion : int
+  -- Foreign Keys --
+  id_jugador : int
+  id_torneo : int
+}
+
+entity "Partido_Jugador" as PJ {
+  -- Foreign Keys --
+  *id_partido : int
+  *id_jugador : int
+  --
+  equipo : bool
+}
+
+
+'|##################################################################|
+'|###                        Relationship                        ###|
+'|##################################################################|
+
+Admin ||--o{ Torneo
+
+Torneo ||--o{ Partido
+Torneo ||--o{ Participacion
+
+Jugador ||--o{ Partido : "Juega | Compite"
+Jugador ||--o{ Participacion
+Jugador ||--o{ PJ
+
+Partido ||--o{ PJ
+
+@enduml

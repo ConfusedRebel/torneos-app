@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { View, Text } from '@/components/Themed';
-import type { Player } from '@/types/player';
+import type { Player } from '@/types/jugador';
 import { useTheme } from '@/hooks/useTheme';
 
 type Props = {

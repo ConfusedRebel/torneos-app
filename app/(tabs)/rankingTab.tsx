@@ -1,7 +1,7 @@
 import { StyleSheet, FlatList } from 'react-native';
 import { Text, View } from '@/components/Themed'; // or: import { Text, View } from 'react-native';
 import { PlayerCard } from '@/components/playerCard'; // ensure file & export names match casing
-import type { Player } from '../../types/player';
+import type { Player } from '../../types/jugador';
 
 export const players: Player[] = [
   { id: '1', name: 'Juan', surname: 'Pérez', age: 24, tennisScore: 1450, paddleScore: 1320 },
