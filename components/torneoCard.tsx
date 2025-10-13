@@ -15,7 +15,7 @@ function TorneoCardBase({ torneo, onPress, style }: Props) {
 
   return (
     <Pressable
-      onPress={() => onPress?.(torneo.id)}
+      onPress={() => onPress?.(torneo.id_torneo)}
       android_ripple={{ borderless: false, color: colors.border }}
       style={({ pressed }) => [
         styles.card,
@@ -25,12 +25,13 @@ function TorneoCardBase({ torneo, onPress, style }: Props) {
       ]}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel={`Abrir ${torneo.name}`}
+      accessibilityLabel={`Abrir ${torneo.nombre}`}
     >
       <View>
-        <Text style={[styles.cardTitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.name}</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.date}</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.location}</Text>
+        <Text style={[styles.cardTitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.nombre}</Text>
+        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.fecha_inicio}</Text>
+        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.ubicacion}</Text>
+        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.duo ? "duo" : "single" }</Text>
       </View>
     </Pressable>
   );

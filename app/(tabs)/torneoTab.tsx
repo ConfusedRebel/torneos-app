@@ -4,22 +4,32 @@ import { TorneoCard } from '@/components/torneoCard';
 import type { Torneo } from '@/types/torneo';
 import { router } from 'expo-router';
 import { useTheme } from '@/hooks/useTheme';
-
-// TEMP: mock data
-const torneos: Torneo[] = [
-  { id: '1', name: 'Torneo Apertura', date: '2025-09-15', location: 'San Isidro' },
-  { id: '2', name: 'Copa Primavera',  date: '2025-10-01', location: 'Palermo' },
-  { id: '3', name: 'Torneo Clausura', date: '2025-11-20', location: 'La Plata' },
-];
+import { useTorneos } from '@/data/torneosProvider';
+import { useEffect, useState } from 'react';
 
 export default function TorneosTab() {
   const { colors } = useTheme();
+  const { list } = useTorneos(); // ← fetch function from provider
+
+  const [torneos, setTorneos] = useState<Torneo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const openTorneo = (id: string) =>
     router.push({ pathname: '/torneos/[id]', params: { id } });
 
-  // Example loading state (if/when you fetch)
-  const isLoading = false;
+  useEffect(() => {
+    const loadTorneos = async () => {
+      try {
+        const data = await list();
+        setTorneos(data);
+      } catch (e) {
+        console.error('Error loading torneos', e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadTorneos();
+  }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -30,8 +40,10 @@ export default function TorneosTab() {
       ) : (
         <FlatList
           data={torneos}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <TorneoCard torneo={item} onPress={openTorneo} />}
+          keyExtractor={(item) => String(item.id_torneo)} // match Supabase id field
+          renderItem={({ item }) => (
+            <TorneoCard torneo={item} onPress={() => openTorneo(item.id_torneo)} />
+          )}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <Text style={{ color: colors.text, textAlign: 'center', marginTop: 24 }}>

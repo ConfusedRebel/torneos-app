@@ -7,7 +7,7 @@
 '|##############################################################|
 
 entity "Jugador" as Jugador {
-  *id_jugador : int
+  *id_jugador : uuid
   --
   nombre : string
   edad: int
@@ -15,11 +15,10 @@ entity "Jugador" as Jugador {
   email : string
   rankingPaddle : int
   rankingTennis : int
-  categoría : string
 }
 
 entity "Administrador" as Admin {
-  *id_administrador : int
+  *id_administrador : uuid
   --
   nombre : string
   email : string
@@ -27,7 +26,7 @@ entity "Administrador" as Admin {
 }
 
 entity "Torneo" as Torneo {
-  *id_torneo : int
+  *id_torneo : uuid
   --
   nombre : string
   deporte: string
@@ -35,18 +34,20 @@ entity "Torneo" as Torneo {
   fecha_inicio : date
   fecha_fin : date
   ubicación : string
-  estado : 3-state-bool
+  estado : string
 }
 
+
 entity "Partido" as Partido {
-  *id_partido : int
+  *id_partido : uuid
   --
   fecha : date
   hora : time
   fase : string
   resultado : string
   -- Foreign Keys --
-  id_torneo : int
+  id_torneo : uuid
+  id_ganador : uuid
 }
 
 
@@ -55,34 +56,44 @@ entity "Partido" as Partido {
 '|###################################################################|
 
 entity "Participacion" as Participacion {
-  *id_participacion : int
   -- Foreign Keys --
-  id_jugador : int
-  id_torneo : int
+  *id_jugador : uuid
+  *id_torneo : uuid
+  --
+  ranking_en_torneo : int
 }
 
 entity "Partido_Jugador" as PJ {
   -- Foreign Keys --
-  *id_partido : int
-  *id_jugador : int
+  *id_partido : uuid
+  *id_jugador : uuid
   --
   equipo : bool
 }
+
 
 
 '|##################################################################|
 '|###                        Relationship                        ###|
 '|##################################################################|
 
-Admin ||--o{ Torneo
 
 Torneo ||--o{ Partido
 Torneo ||--o{ Participacion
 
-Jugador ||--o{ Partido : "Juega | Compite"
 Jugador ||--o{ Participacion
 Jugador ||--o{ PJ
 
 Partido ||--o{ PJ
+
+'|###########################################################|
+'|###                        Notes                        ###|
+'|###########################################################|
+note left of Torneo::estado
+  Valores posibles:
+  - 'pendiente'
+  - 'en curso'
+  - 'finalizado'
+end note
 
 @enduml

@@ -1,13 +1,58 @@
 import React, { createContext, useContext } from 'react';
-import type { TorneosRepo } from './torneosRepo';
-import { mockTorneosRepo } from './adapters/mockTorneosRepo';
+import { supabase } from '../lib/supabase';
+import type { Torneo } from '../types/torneo';
 
-const TorneosCtx = createContext<TorneosRepo>(mockTorneosRepo);
-
-export function TorneosProvider({ repo = mockTorneosRepo, children }:{
-  repo?: TorneosRepo; children: React.ReactNode;
-}) {
-  return <TorneosCtx.Provider value={repo}>{children}</TorneosCtx.Provider>;
+interface TorneosContextType {
+  list(params?: { page?: number; pageSize?: number; search?: string }): Promise<Torneo[]>;
+  get(id: string): Promise<Torneo | null>;
 }
 
-export const useTorneosRepo = () => useContext(TorneosCtx);
+const TorneosContext = createContext<TorneosContextType | null>(null);
+
+export function TorneosProvider({ children }: { children: React.ReactNode }) {
+  async function list(params?: { page?: number; pageSize?: number; search?: string }) {
+    const { page = 1, pageSize = 20, search } = params || {};
+    let query = supabase.from('torneos').select('*', { count: 'exact' });
+
+    if (search) query = query.ilike('nombre', `%${search}%`);
+
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error } = await query.range(from, to).order('fecha_inicio', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching torneos:', error.message);
+      return [];
+    }
+
+    return data as Torneo[];
+  }
+
+  async function get(id: string) {
+    const { data, error } = await supabase
+      .from('torneos')
+      .select('*')
+      .eq('id_torneo', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching torneo:', error.message);
+      return null;
+    }
+
+    return data as Torneo;
+  }
+
+  return (
+    <TorneosContext.Provider value={{ list, get }}>
+      {children}
+    </TorneosContext.Provider>
+  );
+}
+
+export function useTorneos() {
+  const ctx = useContext(TorneosContext);
+  if (!ctx) throw new Error('useTorneos debe usarse dentro de TorneosProvider');
+  return ctx;
+}
