@@ -1,48 +1,12 @@
-import { StyleSheet, Image, FlatList, View as RNView } from 'react-native';
-
-import { Text, View } from '@/components/Themed';
-import { Player } from '@/types/jugador';
-import { Partido } from '@/types/partidoSingle';
-import { PartidoCard } from '@/components/partidoCard';
-import { useTheme } from '@/hooks/useTheme';
-import image from '@/assets/images/favicon.png';
-
-const samplePlayer: Player = {
-  id: '1',
-  name: 'Francisco',
-  surname: 'García',
-  age: 28,
-  tennisScore: 1500,
-  paddleScore: 1600,
-};
-
-const sampleMatches: Partido[] = [
-  {
-    id: 'm1',
-    playerName1: 'Francisco García',
-    playerName2: 'Luis Martínez',
-    score1: 6,
-    score2: 4,
-    date: '2023-10-01',
-    time: '10:00',
-    location: 'Club Deportivo A',
-    tournamentName: 'Torneo de Otoño',
-  },
-  {
-    id: 'm2',
-    playerName1: 'Francisco García',
-    playerName2: 'Carlos López',
-    score1: 3,
-    score2: 6,
-    date: '2023-10-05',
-    time: '15:00',
-    location: 'Club Deportivo B',
-    tournamentName: 'Copa Invierno',
-  },
-];
+import { StyleSheet, Image, FlatList, View as RNView } from "react-native";
+import { Text, View } from "@/components/Themed";
+import { useTheme } from "@/hooks/useTheme";
+import image from "@/assets/images/favicon.png";
+import { useAuth } from "../../providers/AuthProvider";
 
 export default function TabTwoScreen() {
   const { colors } = useTheme();
+  const { jugador } = useAuth(); // ✅ move inside the component
 
   const Header = (
     <RNView>
@@ -56,18 +20,18 @@ export default function TabTwoScreen() {
           ]}
         />
         <Text style={[styles.title, { color: colors.text }]}>
-          {samplePlayer.name} {samplePlayer.surname}
+          {jugador?.nombre} {jugador?.apellido}
         </Text>
       </View>
 
       {/* Stats */}
       <View style={styles.stats}>
-        <Text style={{ color: colors.text }}>Edad: {samplePlayer.age}</Text>
+        <Text style={{ color: colors.text }}>Edad: {jugador?.edad ?? "—"}</Text>
         <Text style={{ color: colors.text }}>
-          Puntuación Tenis: {samplePlayer.tennisScore}
+          Puntuación Tenis: {jugador?.ranking_tennis ?? 0}
         </Text>
         <Text style={{ color: colors.text }}>
-          Puntuación Pádel: {samplePlayer.paddleScore}
+          Puntuación Pádel: {jugador?.ranking_paddle ?? 0}
         </Text>
       </View>
 
@@ -76,31 +40,20 @@ export default function TabTwoScreen() {
     </RNView>
   );
 
+  // You can render a list of matches or just the header for now
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <FlatList
-        data={sampleMatches}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <PartidoCard partido={item} />}
-        ListHeaderComponent={Header}
-        contentContainerStyle={styles.listContent}
-      />
+    <View style={styles.container}>
+      {Header}
+      {/* Example: add FlatList here later for partidos */}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    paddingTop: 24,
-  },
+  container: { flex: 1, padding: 16 },
   headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     columnGap: 16,
     marginBottom: 12,
   },
@@ -110,18 +63,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    flexShrink: 1,
-  },
-  stats: {
-    rowGap: 4,
-    marginTop: 8,
-  },
-  separator: {
-    height: 1,
-    width: '100%',
-    marginTop: 16,
-  },
+  title: { fontSize: 20, fontWeight: "bold", flexShrink: 1 },
+  stats: { rowGap: 4, marginTop: 8 },
+  separator: { height: 1, width: "100%", marginTop: 16 },
 });

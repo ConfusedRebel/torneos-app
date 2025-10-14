@@ -6,6 +6,10 @@ import { Pressable } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
+import { TorneosProvider } from '@/providers/torneosProvider';
+import { JugadoresProvider } from '@/providers/jugadoresProvider';
+import RootLayout from '../_layout';
+
 // Small helper
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -18,9 +22,12 @@ export default function TabLayout() {
   const { colors } = useTheme();
 
   return (
+    <TorneosProvider>
+    <JugadoresProvider>
     <Tabs
       initialRouteName="landingTab"
       screenOptions={{
+        animation: "fade", 
         headerStyle: { backgroundColor: colors.card },
         headerTintColor: colors.text,
         tabBarActiveTintColor: colors.tabIconSelected,
@@ -44,6 +51,7 @@ export default function TabLayout() {
         ),
       }}
     >
+
       <Tabs.Screen
         name="landingTab"
         options={{ title: 'Landing', tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} /> }}
@@ -65,5 +73,7 @@ export default function TabLayout() {
         options={{ title: 'Perfil', tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} /> }}
       />
     </Tabs>
+    </JugadoresProvider>
+    </TorneosProvider>
   );
 }

@@ -4,7 +4,7 @@ import { TorneoCard } from '@/components/torneoCard';
 import type { Torneo } from '@/types/torneo';
 import { router } from 'expo-router';
 import { useTheme } from '@/hooks/useTheme';
-import { useTorneos } from '@/data/torneosProvider';
+import { useTorneos } from '@/providers/torneosProvider';
 import { useEffect, useState } from 'react';
 
 export default function TorneosTab() {
