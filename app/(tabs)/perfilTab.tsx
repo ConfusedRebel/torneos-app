@@ -1,16 +1,58 @@
-import { StyleSheet, Image, FlatList, View as RNView } from "react-native";
+import { useEffect, useState } from "react";
+import { StyleSheet, Image, FlatList, ActivityIndicator, View as RNView } from "react-native";
 import { Text, View } from "@/components/Themed";
 import { useTheme } from "@/hooks/useTheme";
 import image from "@/assets/images/favicon.png";
-import { useAuth } from "../../providers/AuthProvider";
+import { useAuth } from "@/providers/AuthProvider";
+import { supabase } from "@/lib/supabase";
+import { PartidoCard } from "@/components/partidoCard";
+import type { Partido } from "@/types/partido";
 
-export default function TabTwoScreen() {
+export default function PerfilTab() {
   const { colors } = useTheme();
-  const { jugador } = useAuth(); // ✅ move inside the component
+  const { jugador } = useAuth();
+  const [partidosPasados, setPartidosPasados] = useState<Partido[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!jugador?.id_jugador) return;
+
+    const fetchPartidos = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("partido_jugador")
+        .select(`
+          partidos (
+            id_partido,
+            fecha,
+            hora,
+            fase,
+            resultado,
+            torneos (nombre, deporte, ubicacion)
+          )
+        `)
+        .eq("id_jugador", jugador.id_jugador)
+        .order("partidos.fecha", { ascending: false });
+
+      if (error) {
+        console.error("Error cargando partidos:", error.message);
+        setLoading(false);
+        return;
+      }
+
+      const hoy = new Date();
+      const partidos = (data ?? []).map((p) => p.partidos).flat();
+      const pasados = partidos.filter((partido) => new Date(partido.fecha) < hoy);
+
+      setPartidosPasados(pasados);
+      setLoading(false);
+    };
+
+    fetchPartidos();
+  }, [jugador?.id_jugador]);
 
   const Header = (
     <RNView>
-      {/* Header: avatar + name */}
       <View style={styles.headerRow}>
         <Image
           source={image}
@@ -24,7 +66,6 @@ export default function TabTwoScreen() {
         </Text>
       </View>
 
-      {/* Stats */}
       <View style={styles.stats}>
         <Text style={{ color: colors.text }}>Edad: {jugador?.edad ?? "—"}</Text>
         <Text style={{ color: colors.text }}>
@@ -35,16 +76,29 @@ export default function TabTwoScreen() {
         </Text>
       </View>
 
-      {/* Separator */}
       <View style={[styles.separator, { backgroundColor: colors.border }]} />
+      <Text style={[styles.subtitle, { color: colors.text }]}>Partidos Pasados</Text>
     </RNView>
   );
 
-  // You can render a list of matches or just the header for now
   return (
     <View style={styles.container}>
       {Header}
-      {/* Example: add FlatList here later for partidos */}
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.tint} style={{ marginTop: 20 }} />
+      ) : (
+        <FlatList
+          data={partidosPasados}
+          keyExtractor={(item) => item.id_partido}
+          renderItem={({ item }) => <PartidoCard partido={item} />}
+          ListEmptyComponent={
+            <Text style={{ textAlign: "center", marginTop: 20, color: colors.text }}>
+              No hay partidos pasados
+            </Text>
+          }
+          contentContainerStyle={{ paddingBottom: 40 }}
+        />
+      )}
     </View>
   );
 }
@@ -65,5 +119,6 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 20, fontWeight: "bold", flexShrink: 1 },
   stats: { rowGap: 4, marginTop: 8 },
-  separator: { height: 1, width: "100%", marginTop: 16 },
+  separator: { height: 1, width: "100%", marginTop: 16, marginBottom: 10 },
+  subtitle: { fontSize: 16, fontWeight: "600", marginTop: 4 },
 });

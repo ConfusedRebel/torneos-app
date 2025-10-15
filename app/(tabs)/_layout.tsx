@@ -9,6 +9,7 @@ import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { TorneosProvider } from '@/providers/torneosProvider';
 import { JugadoresProvider } from '@/providers/jugadoresProvider';
 import RootLayout from '../_layout';
+import { PartidosProvider } from '@/providers/partidosProvider';
 
 // Small helper
 function TabBarIcon(props: {
@@ -22,6 +23,7 @@ export default function TabLayout() {
   const { colors } = useTheme();
 
   return (
+    <PartidosProvider>
     <TorneosProvider>
     <JugadoresProvider>
     <Tabs
@@ -75,5 +77,6 @@ export default function TabLayout() {
     </Tabs>
     </JugadoresProvider>
     </TorneosProvider>
+    </PartidosProvider>
   );
 }
