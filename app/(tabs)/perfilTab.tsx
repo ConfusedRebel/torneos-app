@@ -37,7 +37,7 @@ export default function PerfilTab() {
 
         // 2️⃣ Buscar partidos donde el jugador participó (equipos 1 o 2)
         const { data, error } = await supabase
-          .from("partidos")
+          .from<Partido>("partidos")
           .select(`
             id_partido,
             fecha,
@@ -55,10 +55,12 @@ export default function PerfilTab() {
 
         // 3️⃣ Filtrar partidos pasados
         const hoy = new Date();
-        const pasados = (data ?? []).filter((p: any) => new Date(p.fecha) < hoy);
-
-      } catch (err: any) {
-        console.error("Error cargando partidos pasados:", err.message);
+        const pasados = (data ?? []).filter((partido) => new Date(partido.fecha) < hoy);
+        setPartidosPasados(pasados);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error("Error cargando partidos pasados:", message);
+        setPartidosPasados([]);
       } finally {
         setLoading(false);
       }

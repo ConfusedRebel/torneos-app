@@ -5,7 +5,7 @@ import type { Torneo } from '../types/torneo';
 interface TorneosContextType {
   list(params?: { page?: number; pageSize?: number; search?: string }): Promise<Torneo[]>;
   get(id: string): Promise<Torneo | null>;
-  join(id_torneo: string, id_jugador: string): Promise<void>; // 👈 agregado
+  join(id_torneo: string, id_jugador: string): Promise<number>;
 }
 
 const TorneosContext = createContext<TorneosContextType | null>(null);
@@ -45,13 +45,56 @@ export function TorneosProvider({ children }: { children: React.ReactNode }) {
     return data as Torneo;
   }
 
-  // 👇 NUEVA FUNCIÓN
   async function join(id_torneo: string, id_jugador: string) {
-    const { data, error } = await supabase
+    const { data: torneoData, error: torneoError } = await supabase
+      .from('torneos')
+      .select('participantes, maxParticipantes, estado')
+      .eq('id_torneo', id_torneo)
+      .single();
+
+    if (torneoError) throw torneoError;
+
+    if (!torneoData) {
+      throw new Error('TORNEO_NO_ENCONTRADO');
+    }
+
+    if (torneoData.estado !== 'pendiente') {
+      throw new Error('TORNEO_NO_DISPONIBLE');
+    }
+
+    if ((torneoData.participantes ?? 0) >= (torneoData.maxParticipantes ?? 0)) {
+      throw new Error('TORNEO_SIN_CUPOS');
+    }
+
+    const { data: existingPlayer, error: existingError } = await supabase
+      .from('jugadores_torneos')
+      .select('id_jugador')
+      .eq('id_torneo', id_torneo)
+      .eq('id_jugador', id_jugador)
+      .maybeSingle();
+
+    if (existingError) throw existingError;
+
+    if (existingPlayer) {
+      throw new Error('YA_REGISTRADO');
+    }
+
+    const { error: insertError } = await supabase
       .from('jugadores_torneos')
       .insert({ id_torneo, id_jugador });
 
-    if (error) throw error;
+    if (insertError) throw insertError;
+
+    const updatedCount = (torneoData.participantes ?? 0) + 1;
+
+    const { error: updateError } = await supabase
+      .from('torneos')
+      .update({ participantes: updatedCount })
+      .eq('id_torneo', id_torneo);
+
+    if (updateError) throw updateError;
+
+    return updatedCount;
   }
 
   return (
