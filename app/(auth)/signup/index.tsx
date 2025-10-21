@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Link, router } from "expo-router";
 import { z } from "zod";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, type TextInputProps } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -204,17 +204,18 @@ export default function SignUp() {
 }
 
 // ✅ InputField — componente reutilizable
+type InputFieldProps = {
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  error?: string;
+} & TextInputProps;
+
 function InputField({
   label,
   icon,
   error,
   ...props
-}: {
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  error?: string;
-  [x: string]: any;
-}) {
+}: InputFieldProps) {
   return (
     <View style={styles.inputContainer}>
       <Text style={styles.inputLabel}>{label}</Text>
