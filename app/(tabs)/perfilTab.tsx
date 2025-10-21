@@ -19,38 +19,55 @@ export default function PerfilTab() {
 
     const fetchPartidos = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("partido_jugador")
-        .select(`
-          partidos (
+      try {
+        // 1️⃣ Buscar equipos del jugador
+        const { data: equipos, error: equiposError } = await supabase
+          .from("equipos")
+          .select("id_equipo")
+          .or(`id_jugador1.eq.${jugador.id_jugador},id_jugador2.eq.${jugador.id_jugador}`);
+
+        if (equiposError) throw equiposError;
+        if (!equipos?.length) {
+          setPartidosPasados([]);
+          setLoading(false);
+          return;
+        }
+
+        const equipoIds = equipos.map((e) => e.id_equipo);
+
+        // 2️⃣ Buscar partidos donde el jugador participó (equipos 1 o 2)
+        const { data, error } = await supabase
+          .from("partidos")
+          .select(`
             id_partido,
             fecha,
             hora,
             fase,
             resultado,
-            torneos (nombre, deporte, ubicacion)
-          )
-        `)
-        .eq("id_jugador", jugador.id_jugador)
-        .order("partidos.fecha", { ascending: false });
+            torneos (nombre, deporte, ubicacion),
+            equipo1:id_equipo1 (id_equipo, nombre),
+            equipo2:id_equipo2 (id_equipo, nombre)
+          `)
+          .or(equipoIds.map((id) => `id_equipo1.eq.${id},id_equipo2.eq.${id}`).join(","))
+          .order("fecha", { ascending: false });
 
-      if (error) {
-        console.error("Error cargando partidos:", error.message);
+        if (error) throw error;
+
+        // 3️⃣ Filtrar partidos pasados
+        const hoy = new Date();
+        const pasados = (data ?? []).filter((p: any) => new Date(p.fecha) < hoy);
+
+      } catch (err: any) {
+        console.error("Error cargando partidos pasados:", err.message);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const hoy = new Date();
-      const partidos = (data ?? []).map((p) => p.partidos).flat();
-      const pasados = partidos.filter((partido) => new Date(partido.fecha) < hoy);
-
-      setPartidosPasados(pasados);
-      setLoading(false);
     };
 
     fetchPartidos();
   }, [jugador?.id_jugador]);
 
+  // 🔹 Encabezado con avatar + datos de jugador
   const Header = (
     <RNView>
       <View style={styles.headerRow}>
@@ -69,10 +86,10 @@ export default function PerfilTab() {
       <View style={styles.stats}>
         <Text style={{ color: colors.text }}>Edad: {jugador?.edad ?? "—"}</Text>
         <Text style={{ color: colors.text }}>
-          Puntuación Tenis: {jugador?.ranking_tennis ?? 0}
+          Ranking Tenis: {jugador?.ranking_tennis ?? 0}
         </Text>
         <Text style={{ color: colors.text }}>
-          Puntuación Pádel: {jugador?.ranking_paddle ?? 0}
+          Ranking Pádel: {jugador?.ranking_paddle ?? 0}
         </Text>
       </View>
 

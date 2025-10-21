@@ -10,6 +10,7 @@ interface PartidosContextType {
 const PartidosContext = createContext<PartidosContextType | null>(null);
 
 export function PartidosProvider({ children }: { children: React.ReactNode }) {
+  // 🔹 LISTAR PARTIDOS
   async function list(params?: { page?: number; pageSize?: number; search?: string }) {
     const { page = 1, pageSize = 20 } = params || {};
     const from = (page - 1) * pageSize;
@@ -23,7 +24,10 @@ export function PartidosProvider({ children }: { children: React.ReactNode }) {
         hora,
         fase,
         resultado,
-        torneos (nombre, deporte, ubicacion)
+        torneos (nombre, deporte, ubicacion),
+        equipo1:id_equipo1 (id_equipo, nombre, id_jugador1, id_jugador2),
+        equipo2:id_equipo2 (id_equipo, nombre, id_jugador1, id_jugador2),
+        ganador:id_ganador (id_equipo, nombre)
       `)
       .order('fecha', { ascending: true })
       .range(from, to);
@@ -36,13 +40,30 @@ export function PartidosProvider({ children }: { children: React.ReactNode }) {
     return data as unknown as Partido[];
   }
 
+  // 🔹 OBTENER UN PARTIDO POR ID
   async function get(id: string) {
     const { data, error } = await supabase
       .from('partidos')
       .select(`
-        *,
-        torneos (nombre, deporte, ubicacion),
-        jugadores:partido_jugador (nombre, apellido, equipo)
+        id_partido,
+        fecha,
+        hora,
+        fase,
+        resultado,
+        torneos (id_torneo, nombre, deporte, ubicacion),
+        equipo1:id_equipo1 (
+          id_equipo,
+          nombre,
+          jugador1:id_jugador1 (id_jugador, nombre, apellido),
+          jugador2:id_jugador2 (id_jugador, nombre, apellido)
+        ),
+        equipo2:id_equipo2 (
+          id_equipo,
+          nombre,
+          jugador1:id_jugador1 (id_jugador, nombre, apellido),
+          jugador2:id_jugador2 (id_jugador, nombre, apellido)
+        ),
+        ganador:id_ganador (id_equipo, nombre)
       `)
       .eq('id_partido', id)
       .single();
@@ -52,7 +73,7 @@ export function PartidosProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
 
-    return data as Partido;
+    return data as unknown as Partido;
   }
 
   return (

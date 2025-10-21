@@ -5,6 +5,7 @@ import type { Torneo } from '../types/torneo';
 interface TorneosContextType {
   list(params?: { page?: number; pageSize?: number; search?: string }): Promise<Torneo[]>;
   get(id: string): Promise<Torneo | null>;
+  join(id_torneo: string, id_jugador: string): Promise<void>; // 👈 agregado
 }
 
 const TorneosContext = createContext<TorneosContextType | null>(null);
@@ -44,8 +45,17 @@ export function TorneosProvider({ children }: { children: React.ReactNode }) {
     return data as Torneo;
   }
 
+  // 👇 NUEVA FUNCIÓN
+  async function join(id_torneo: string, id_jugador: string) {
+    const { data, error } = await supabase
+      .from('jugadores_torneos')
+      .insert({ id_torneo, id_jugador });
+
+    if (error) throw error;
+  }
+
   return (
-    <TorneosContext.Provider value={{ list, get }}>
+    <TorneosContext.Provider value={{ list, get, join }}>
       {children}
     </TorneosContext.Provider>
   );

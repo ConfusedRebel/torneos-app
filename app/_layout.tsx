@@ -5,26 +5,23 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-
-import AuthProvider from '@/providers/AuthProvider';
-
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useColorScheme } from '@/components/useColorScheme';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { defaultRouteInfo } from 'expo-router/build/global-state/routeInfo';
 
+// 🔹 Tus providers
+import AuthProvider from '@/providers/AuthProvider';
+import { TorneosProvider } from '@/providers/torneosProvider';
+import { PartidosProvider } from '@/providers/partidosProvider';
+import { JugadoresProvider } from '@/providers/jugadoresProvider';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Evita que el splash se oculte antes de tiempo
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -33,20 +30,15 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
+    if (loaded) SplashScreen.hideAsync();
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
+  if (!loaded) return null;
 
   return <RootLayoutNav />;
 }
@@ -55,20 +47,38 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <AuthProvider>
-      <GestureHandlerRootView>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-
-            <Stack screenOptions={{animation: "simple_push",} }>
-              <Stack.Screen name ="(auth)/signin/index" options = {{headerShown:false, animation : "ios_from_right", gestureEnabled : false}}/>
-              <Stack.Screen name ="(auth)/signup/index" options = {{headerShown:false, animation : "ios_from_right", gestureEnabled : false}}/>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="config" options={{ title: 'Configuración' }} />
-              <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-            </Stack>
-
-        </ThemeProvider>
-      </GestureHandlerRootView>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <AuthProvider>
+          <TorneosProvider>
+            <PartidosProvider>
+              <JugadoresProvider>
+                <Stack screenOptions={{ animation: 'simple_push' }}>
+                  <Stack.Screen
+                    name="(auth)/signin/index"
+                    options={{
+                      headerShown: false,
+                      animation: 'ios_from_right',
+                      gestureEnabled: false,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="(auth)/signup/index"
+                    options={{
+                      headerShown: false,
+                      animation: 'ios_from_right',
+                      gestureEnabled: false,
+                    }}
+                  />
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="config" options={{ title: 'Configuración' }} />
+                  <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+                </Stack>
+              </JugadoresProvider>
+            </PartidosProvider>
+          </TorneosProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

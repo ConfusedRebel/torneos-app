@@ -18,34 +18,46 @@ export default function PartidosFuturosTab() {
 
     const fetchPartidos = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("partido_jugador")
-        .select(`
-          partidos (
+
+      try {
+        const { data: equipos, error: equiposError } = await supabase
+          .from("equipos")
+          .select("id_equipo")
+          .or(`id_jugador1.eq.${jugador.id_jugador},id_jugador2.eq.${jugador.id_jugador}`);
+
+        if (equiposError) throw equiposError;
+        if (!equipos?.length) {
+          setPartidos([]);
+          setLoading(false);
+          return;
+        }
+
+        const equipoIds = equipos.map((e) => e.id_equipo);
+
+        const { data, error } = await supabase
+          .from("partidos")
+          .select(`
             id_partido,
             fecha,
             hora,
             fase,
             resultado,
-            torneos (nombre, deporte, ubicacion)
-          )
-        `)
-        .eq("id_jugador", jugador.id_jugador)
-        .order("partidos.fecha", { ascending: true });
+            torneos (nombre, deporte, ubicacion),
+            equipo1:id_equipo1 (id_equipo, nombre),
+            equipo2:id_equipo2 (id_equipo, nombre)
+          `)
+          .or(equipoIds.map((id) => `id_equipo1.eq.${id},id_equipo2.eq.${id}`).join(","))
+          .order("fecha", { ascending: true });
 
-      if (error) {
-        console.error("Error cargando partidos futuros:", error.message);
+        if (error) throw error;
+
+        const hoy = new Date();
+        const futuros = (data ?? []).filter((p: any) => new Date(p.fecha) >= hoy);
+      } catch (err: any) {
+        console.error("Error cargando partidos futuros:", err.message);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const hoy = new Date();
-      const futuros = (data ?? [])
-        .map((p) => p.partidos)
-        .filter((p) => new Date(p.fecha) >= hoy);
-
-      setPartidos(futuros);
-      setLoading(false);
     };
 
     fetchPartidos();

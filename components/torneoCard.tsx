@@ -32,6 +32,7 @@ function TorneoCardBase({ torneo, onPress, style }: Props) {
         <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.fecha_inicio}</Text>
         <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.ubicacion}</Text>
         <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.duo ? "duo" : "single" }</Text>
+        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{ torneo.participantes + "/" + torneo.maxParticipantes }</Text>
       </View>
     </Pressable>
   );

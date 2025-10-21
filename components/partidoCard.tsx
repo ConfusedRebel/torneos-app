@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { StyleSheet, ViewStyle } from 'react-native';
 import { View, Text } from '@/components/Themed';
-import type { Partido } from '../types/partido';
+import type { Partido } from '@/types/partido';
 import { useTheme } from '@/hooks/useTheme';
 
 type Props = {
@@ -11,6 +11,19 @@ type Props = {
 
 function PartidoCardBase({ partido, style }: Props) {
   const { colors } = useTheme();
+
+  // Helpers para mostrar los nombres de equipos o “sin definir”
+  const equipo1Nombre = partido.equipo1?.nombre || 'Equipo 1';
+  const equipo2Nombre = partido.equipo2?.nombre || 'Equipo 2';
+  const torneoNombre = partido.torneos?.nombre || 'Torneo desconocido';
+  const ubicacion = partido.torneos?.ubicacion || 'Ubicación no definida';
+
+  // Formato de fecha legible
+  const fecha = new Date(partido.fecha).toLocaleDateString('es-AR', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
 
   return (
     <View
@@ -23,21 +36,32 @@ function PartidoCardBase({ partido, style }: Props) {
         style,
       ]}
     >
+      {/* 🏆 Equipos */}
       <Text style={[styles.cardTitle, { color: colors.text }]}>
-        {partido.playerName1} vs {partido.playerName2}
+        {equipo1Nombre} vs {equipo2Nombre}
       </Text>
+
+      {/* 🕓 Fecha y hora */}
       <Text style={[styles.cardSubtitle, { color: colors.text }]}>
-        {partido.score1} - {partido.score2}
+        {fecha} - {partido.hora}
       </Text>
+
+      {/* 📍 Ubicación */}
       <Text style={[styles.cardSubtitle, { color: colors.text }]}>
-        {partido.date} {partido.time}
+        {ubicacion}
       </Text>
-      <Text style={[styles.cardSubtitle, { color: colors.text }]}>
-        {partido.location}
+
+      {/* 🏅 Torneo */}
+      <Text style={[styles.cardSubtitle, { color: colors.tint, fontWeight: '600' }]}>
+        {torneoNombre}
       </Text>
-      <Text style={[styles.cardSubtitle, { color: colors.text }]}>
-        {partido.tournamentName}
-      </Text>
+
+      {/* 🔢 Resultado */}
+      {partido.resultado && (
+        <Text style={[styles.cardResult, { color: colors.text }]}>
+          Resultado: {partido.resultado}
+        </Text>
+      )}
     </View>
   );
 }
@@ -62,5 +86,10 @@ const styles = StyleSheet.create({
   cardSubtitle: {
     fontSize: 14,
     marginTop: 2,
+  },
+  cardResult: {
+    fontSize: 15,
+    marginTop: 6,
+    fontWeight: '500',
   },
 });
