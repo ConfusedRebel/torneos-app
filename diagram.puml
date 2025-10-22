@@ -1,98 +1,102 @@
 @startuml Entity_Relationship_Diagram
 
-'Alt + D para mostrar diagrama entidad relacion utilizando "plantuml"
+' Alt + D para mostrar el diagrama entidad-relación utilizando "PlantUML"
 
 '|##############################################################|
 '|###                        Entities                        ###|
 '|##############################################################|
 
+entity "Administrador" as Administrador {
+  *id_administrador : uuid
+  --
+  user_id : uuid
+  nombre : text
+  email : text
+  contraseña : text
+}
+
 entity "Jugador" as Jugador {
   *id_jugador : uuid
   --
-  nombre : string
-  edad: int
-  apellido : string
-  email : string
-  rankingPaddle : int
-  rankingTennis : int
-}
-
-entity "Administrador" as Admin {
-  *id_administrador : uuid
-  --
-  nombre : string
-  email : string
-  contraseña : string
+  user_id : uuid
+  nombre : text
+  apellido : text
+  edad : int
+  email : text
+  ranking_paddle : int
+  ranking_tennis : int
 }
 
 entity "Torneo" as Torneo {
   *id_torneo : uuid
   --
-  nombre : string
-  deporte: string
-  duo : bool  
+  nombre : text
+  deporte : text
+  duo : bool
   fecha_inicio : date
   fecha_fin : date
-  ubicación : string
-  estado : string
+  ubicacion : text
+  estado : estado_torneo
+  participantes : smallint
+  maxParticipantes : smallint
 }
 
+entity "Equipo" as Equipo {
+  *id_equipo : uuid
+  --
+  id_torneo : uuid
+  nombre : text
+  id_jugador1 : uuid
+  id_jugador2 : uuid
+  puntos : int
+  ranking_en_torneo : int
+}
 
 entity "Partido" as Partido {
   *id_partido : uuid
   --
   fecha : date
   hora : time
-  fase : string
-  resultado : string
-  -- Foreign Keys --
+  fase : text
+  resultado : text
   id_torneo : uuid
+  id_equipo1 : uuid
+  id_equipo2 : uuid
   id_ganador : uuid
 }
 
 
-'|###################################################################|
-'|###                        Linking Table                        ###|
-'|###################################################################|
-
-entity "Participacion" as Participacion {
-  -- Foreign Keys --
-  *id_jugador : uuid
-  *id_torneo : uuid
-  --
-  ranking_en_torneo : int
-}
-
-entity "Partido_Jugador" as PJ {
-  -- Foreign Keys --
-  *id_partido : uuid
-  *id_jugador : uuid
-  --
-  equipo : bool
-}
-
-
-
 '|##################################################################|
-'|###                        Relationship                        ###|
+'|###                        Relaciones                          ###|
 '|##################################################################|
 
+' Auth relations
+Administrador }o--|| "auth.users" : user_id
+Jugador }o--|| "auth.users" : user_id
 
-Torneo ||--o{ Partido
-Torneo ||--o{ Participacion
+' Core relationships
+Torneo ||--o{ Equipo : contiene >
+Torneo ||--o{ Partido : organiza >
 
-Jugador ||--o{ Participacion
-Jugador ||--o{ PJ
+Equipo ||--|| Torneo : pertenece a >
+Equipo ||--o{ Partido : participa en >
 
-Partido ||--o{ PJ
+Jugador ||--o{ Equipo : integra >
+Jugador ||--o{ Equipo : puede ser jugador1 o jugador2 >
+
+Partido }o--|| Equipo : equipo1
+Partido }o--|| Equipo : equipo2
+Partido }o--o| Equipo : ganador
+
 
 '|###########################################################|
 '|###                        Notes                        ###|
 '|###########################################################|
 note left of Torneo::estado
+  Tipo: enum estado_torneo
   Valores posibles:
   - 'pendiente'
-  - 'en curso'
+  - 'en_curso'
   - 'finalizado'
 end note
 
