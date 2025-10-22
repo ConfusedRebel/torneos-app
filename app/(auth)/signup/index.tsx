@@ -6,6 +6,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, type
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { TEXT_STYLES } from "@/constants/Text";
 
 // 📘 Validación
 const signUpSchema = z.object({
@@ -78,8 +79,8 @@ export default function SignUp() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.title}>¡Registra tu cuenta!</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[TEXT_STYLES.hero, styles.title]}>¡Registra tu cuenta!</Text>
+        <Text style={[TEXT_STYLES.subtitle, styles.subtitle]}>
           Hola, debes iniciar sesión primero para poder usar la aplicación y disfrutar de todas las funciones.
         </Text>
 
@@ -174,26 +175,28 @@ export default function SignUp() {
             onPress={handleSubmit(onSubmit)}
             disabled={loading}
           >
-            <Text style={styles.buttonText}>{loading ? "Registrando..." : "Registrarse"}</Text>
+            <Text style={[TEXT_STYLES.button, styles.buttonText]}>
+              {loading ? "Registrando..." : "Registrarse"}
+            </Text>
           </TouchableOpacity>
 
           {/* Términos */}
           <View style={styles.termsContainer}>
-            <Text style={styles.termsText}>
+            <Text style={[TEXT_STYLES.body, styles.termsText]}>
               Al crear una cuenta, aceptas nuestros{" "}
-              <Text style={styles.linkText}>Términos y Condiciones</Text>.
+              <Text style={[TEXT_STYLES.bodyBold, styles.linkText]}>Términos y Condiciones</Text>.
             </Text>
           </View>
 
           {/* Error */}
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {error && <Text style={[TEXT_STYLES.body, styles.errorText]}>{error}</Text>}
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
+            <Text style={[TEXT_STYLES.body, styles.footerText]}>
               ¿Ya tienes una cuenta?{" "}
               <Link href="/(auth)/signin">
-                <Text style={styles.linkText}>Iniciar sesión</Text>
+                <Text style={[TEXT_STYLES.bodyBold, styles.linkText]}>Iniciar sesión</Text>
               </Link>
             </Text>
           </View>
@@ -218,12 +221,12 @@ function InputField({
 }: InputFieldProps) {
   return (
     <View style={styles.inputContainer}>
-      <Text style={styles.inputLabel}>{label}</Text>
+      <Text style={[TEXT_STYLES.body, styles.inputLabel]}>{label}</Text>
       <View style={[styles.inputWrapper, error && { borderColor: "#dc2626", borderWidth: 1 }]}>
         <Ionicons name={icon} size={20} color="#666" style={styles.inputIcon} />
-        <TextInput style={styles.input} placeholderTextColor="#999" {...props} />
+        <TextInput style={[TEXT_STYLES.body, styles.input]} placeholderTextColor="#999" {...props} />
       </View>
-      {error && <Text style={{ color: "#dc2626", fontSize: 13 }}>{error}</Text>}
+      {error && <Text style={[TEXT_STYLES.footnote, styles.inputErrorText]}>{error}</Text>}
     </View>
   );
 }
@@ -232,11 +235,11 @@ function InputField({
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#f5f5f5" },
   container: { flex: 1, padding: 24, justifyContent: "center" },
-  title: { fontSize: 28, fontFamily: "RobotoBold", color: "#000", marginBottom: 8 },
-  subtitle: { fontSize: 16, fontFamily: "Roboto", color: "#666", marginBottom: 32, lineHeight: 24 },
+  title: { color: "#000", marginBottom: 8 },
+  subtitle: { color: "#666", marginBottom: 32 },
   form: { gap: 18 },
   inputContainer: { gap: 6 },
-  inputLabel: { fontSize: 16, fontFamily: "Roboto", color: "#333" },
+  inputLabel: { color: "#333" },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
@@ -246,13 +249,14 @@ const styles = StyleSheet.create({
     height: 48,
   },
   inputIcon: { marginRight: 12 },
-  input: { flex: 1, fontFamily: "Roboto", fontSize: 16, color: "#000" },
+  input: { flex: 1, color: "#000" },
   button: { backgroundColor: "#000", borderRadius: 12, height: 48, justifyContent: "center", alignItems: "center" },
-  buttonText: { color: "#fff", fontFamily: "RobotoBold", fontSize: 16 },
+  buttonText: { color: "#fff" },
   termsContainer: { marginTop: 10 },
-  termsText: { fontFamily: "Roboto", color: "#666", lineHeight: 20 },
-  linkText: { color: "#6366f1", fontFamily: "RobotoBold" },
+  termsText: { color: "#666", lineHeight: 20 },
+  linkText: { color: "#6366f1" },
   footer: { alignItems: "center", marginTop: 20 },
-  footerText: { fontFamily: "Roboto", color: "#666" },
-  errorText: { color: "#dc2626", textAlign: "center", fontFamily: "Roboto" },
+  footerText: { color: "#666" },
+  errorText: { color: "#dc2626", textAlign: "center" },
+  inputErrorText: { color: "#dc2626" },
 });

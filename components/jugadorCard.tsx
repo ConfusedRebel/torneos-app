@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { View, Text } from '@/components/Themed';
 import type { Jugador } from '@/types/jugador';
 import { useTheme } from '@/hooks/useTheme';
+import { TEXT_STYLES } from '@/constants/Text';
 
 type Props = {
   jugador: Jugador;
@@ -28,13 +29,19 @@ function JugadorCardBase({ jugador, onPress, style }: Props) {
       accessibilityLabel={`Abrir ${jugador.nombre} ${jugador.apellido}`}
     >
       <View>
-        <Text style={[styles.cardTitle, { color: colors.text, backgroundColor: colors.card }]}>
+        <Text
+          style={[TEXT_STYLES.title, { color: colors.text, backgroundColor: colors.card }]}
+        >
           {jugador.nombre} {jugador.apellido}
         </Text>
-        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>
+        <Text
+          style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}
+        >
           Edad: {jugador.edad}
         </Text>
-        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>
+        <Text
+          style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}
+        >
           🎾 {jugador.ranking_tennis} | 🏓 {jugador.ranking_paddle}
         </Text>
       </View>
@@ -57,12 +64,7 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.9,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   cardSubtitle: {
-    fontSize: 14,
     marginTop: 4,
   },
 });

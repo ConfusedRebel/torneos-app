@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { useTheme } from '@/hooks/useTheme';
 import { useTorneos } from '@/providers/torneosProvider';
 import { useEffect, useState } from 'react';
+import { TEXT_STYLES } from '@/constants/Text';
 
 export default function TorneosTab() {
   const { colors } = useTheme();
@@ -34,7 +35,7 @@ export default function TorneosTab() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Torneos</Text>
+      <Text style={[TEXT_STYLES.headingLg, styles.title, { color: colors.text }]}>Torneos</Text>
 
       {isLoading ? (
         <ActivityIndicator size="large" color={colors.tint} />
@@ -47,7 +48,9 @@ export default function TorneosTab() {
           )}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <Text style={{ color: colors.text, textAlign: 'center', marginTop: 24 }}>
+            <Text
+              style={[TEXT_STYLES.body, { color: colors.text, textAlign: 'center', marginTop: 24 }]}
+            >
               No hay torneos por ahora
             </Text>
           }
@@ -59,6 +62,6 @@ export default function TorneosTab() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 20 },
-  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 10 },
+  title: { textAlign: 'center', marginBottom: 10 },
   list: { paddingHorizontal: 16, paddingBottom: 16 },
 });

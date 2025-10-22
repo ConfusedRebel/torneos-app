@@ -3,6 +3,7 @@ import { StyleSheet, ViewStyle } from 'react-native';
 import { View, Text } from '@/components/Themed';
 import type { Partido } from '@/types/partido';
 import { useTheme } from '@/hooks/useTheme';
+import { TEXT_STYLES } from '@/constants/Text';
 
 type Props = {
   partido: Partido;
@@ -37,28 +38,30 @@ function PartidoCardBase({ partido, style }: Props) {
       ]}
     >
       {/* 🏆 Equipos */}
-      <Text style={[styles.cardTitle, { color: colors.text }]}>
+      <Text style={[TEXT_STYLES.title, styles.cardTitle, { color: colors.text }]}>
         {equipo1Nombre} vs {equipo2Nombre}
       </Text>
 
       {/* 🕓 Fecha y hora */}
-      <Text style={[styles.cardSubtitle, { color: colors.text }]}>
+      <Text style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text }]}>
         {fecha} - {partido.hora}
       </Text>
 
       {/* 📍 Ubicación */}
-      <Text style={[styles.cardSubtitle, { color: colors.text }]}>
+      <Text style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text }]}>
         {ubicacion}
       </Text>
 
       {/* 🏅 Torneo */}
-      <Text style={[styles.cardSubtitle, { color: colors.tint, fontWeight: '600' }]}>
+      <Text
+        style={[TEXT_STYLES.captionBold, styles.cardSubtitle, { color: colors.tint }]}
+      >
         {torneoNombre}
       </Text>
 
       {/* 🔢 Resultado */}
       {partido.resultado && (
-        <Text style={[styles.cardResult, { color: colors.text }]}>
+        <Text style={[TEXT_STYLES.detail, styles.cardResult, { color: colors.text }]}>
           Resultado: {partido.resultado}
         </Text>
       )}
@@ -79,17 +82,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
     marginBottom: 4,
   },
   cardSubtitle: {
-    fontSize: 14,
     marginTop: 2,
   },
   cardResult: {
-    fontSize: 15,
     marginTop: 6,
-    fontWeight: '500',
   },
 });

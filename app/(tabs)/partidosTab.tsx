@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/AuthProvider";
 import { PartidoCard } from "@/components/partidoCard";
 import type { Partido } from "@/types/partido";
+import { TEXT_STYLES } from "@/constants/Text";
 
 export default function PartidosFuturosTab() {
   const { colors } = useTheme();
@@ -68,7 +69,9 @@ export default function PartidosFuturosTab() {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: colors.text }]}>Partidos Futuros</Text>
+      <Text style={[TEXT_STYLES.headingMd, styles.title, { color: colors.text }]}>
+        Partidos Futuros
+      </Text>
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.tint} style={{ marginTop: 20 }} />
@@ -78,7 +81,7 @@ export default function PartidosFuturosTab() {
           keyExtractor={(item) => item.id_partido}
           renderItem={({ item }) => <PartidoCard partido={item} />}
           ListEmptyComponent={
-            <Text style={{ textAlign: "center", marginTop: 20, color: colors.text }}>
+            <Text style={[TEXT_STYLES.body, { textAlign: "center", marginTop: 20, color: colors.text }]}>
               No tenés partidos futuros
             </Text>
           }
@@ -91,5 +94,5 @@ export default function PartidosFuturosTab() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  title: { fontSize: 22, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
+  title: { textAlign: "center", marginBottom: 20 },
 });

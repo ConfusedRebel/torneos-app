@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { supabase } from '@/lib/supabase';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { TEXT_STYLES } from '@/constants/Text';
 
 const signInSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
@@ -51,8 +52,8 @@ export default function SignIn() {
 
   return (
       <View style={styles.container}>
-        <Text style={styles.title}>¡Hola de nuevo!</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[TEXT_STYLES.hero, styles.title]}>¡Hola de nuevo!</Text>
+        <Text style={[TEXT_STYLES.subtitle, styles.subtitle]}>
           Inicia sesión para continuar usando la aplicación y gestionar tus tareas
         </Text>
 
@@ -62,11 +63,11 @@ export default function SignIn() {
             name="email"
             render={({ field: { onChange, value } }) => (
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Correo electrónico</Text>
+                <Text style={[TEXT_STYLES.body, styles.inputLabel]}>Correo electrónico</Text>
                 <View style={styles.inputWrapper}>
                   <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={[TEXT_STYLES.body, styles.input]}
                     placeholder="leandro@gmail.com"
                     placeholderTextColor="#999"
                     autoCapitalize="none"
@@ -76,7 +77,9 @@ export default function SignIn() {
                   />
                 </View>
                 {errors.email && (
-                  <Text style={styles.errorMessage}>{errors.email.message}</Text>
+                  <Text style={[TEXT_STYLES.caption, styles.errorMessage]}>
+                    {errors.email.message}
+                  </Text>
                 )}
               </View>
             )}
@@ -87,11 +90,11 @@ export default function SignIn() {
             name="password"
             render={({ field: { onChange, value } }) => (
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Contraseña</Text>
+                <Text style={[TEXT_STYLES.body, styles.inputLabel]}>Contraseña</Text>
                 <View style={styles.inputWrapper}>
                   <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={[TEXT_STYLES.body, styles.input]}
                     placeholder="********"
                     placeholderTextColor="#999"
                     secureTextEntry
@@ -100,33 +103,35 @@ export default function SignIn() {
                   />
                 </View>
                 {errors.password && (
-                  <Text style={styles.errorMessage}>{errors.password.message}</Text>
+                  <Text style={[TEXT_STYLES.caption, styles.errorMessage]}>
+                    {errors.password.message}
+                  </Text>
                 )}
               </View>
             )}
           />
 
           <View style={styles.forgotPassword}>
-            <Text style={styles.linkText}>¿Has olvidado tu contraseña?</Text>
+            <Text style={[TEXT_STYLES.bodyBold, styles.linkText]}>¿Has olvidado tu contraseña?</Text>
           </View>
 
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {error && <Text style={[TEXT_STYLES.body, styles.errorText]}>{error}</Text>}
 
           <TouchableOpacity 
             style={styles.button}
             onPress={handleSubmit(onSubmit)}
             disabled={loading}
           >
-            <Text style={styles.buttonText}>
+            <Text style={[TEXT_STYLES.button, styles.buttonText]}>
               {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
             </Text>
           </TouchableOpacity>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
+            <Text style={[TEXT_STYLES.body, styles.footerText]}>
               ¿No tienes una cuenta?{' '}
               <Link href="/(auth)/signup">
-                <Text style={styles.linkText}>Regístrate</Text>
+                <Text style={[TEXT_STYLES.bodyBold, styles.linkText]}>Regístrate</Text>
               </Link>
             </Text>
           </View>
@@ -142,17 +147,12 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   title: {
-    fontSize: 28,
-    fontFamily: "RobotoBold",
-    color: "#000",
+    color: '#000',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    fontFamily: "Roboto",
-    color: "#666",
+    color: '#666',
     marginBottom: 32,
-    lineHeight: 24,
   },
   form: {
     gap: 20,
@@ -161,8 +161,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   inputLabel: {
-    fontSize: 16,
-    fontFamily: 'Roboto',
     color: '#333',
   },
   inputWrapper: {
@@ -179,8 +177,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: '100%',
-    fontFamily: 'Roboto',
-    fontSize: 16,
     color: '#000',
   },
   forgotPassword: {
@@ -195,28 +191,21 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    fontFamily: 'RobotoBold',
-    fontSize: 16,
   },
   footer: {
     alignItems: 'center',
   },
   footerText: {
-    fontFamily: 'Roboto',
     color: '#666',
   },
   linkText: {
     color: '#6366f1',
-    fontFamily: 'RobotoBold',
   },
   errorText: {
     color: '#dc2626',
     textAlign: 'center',
-    fontFamily: 'Roboto',
   },
   errorMessage: {
     color: '#dc2626',
-    fontSize: 14,
-    fontFamily: 'Roboto',
-  }
+  },
 });
