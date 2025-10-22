@@ -8,6 +8,36 @@ import { supabase } from "@/lib/supabase";
 import { PartidoCard } from "@/components/partidoCard";
 import type { Partido } from "@/types/partido";
 
+type PartidoIdRow = { id_partido: string };
+
+type PartidoJugadorRow = {
+  equipo: boolean;
+  jugador: {
+    id_jugador: string;
+    nombre: string;
+    apellido: string;
+  } | null;
+};
+
+type PartidoRow = {
+  id_partido: string;
+  fecha: string;
+  hora: string;
+  fase?: string | null;
+  resultado?: string | null;
+  ganador?: {
+    id_jugador: string;
+    nombre: string;
+    apellido: string;
+  } | null;
+  torneo?: {
+    nombre: string;
+    deporte: string;
+    ubicacion: string;
+  } | null;
+  participantes?: PartidoJugadorRow[] | null;
+};
+
 export default function PerfilTab() {
   const { colors } = useTheme();
   const { jugador } = useAuth();
@@ -20,42 +50,73 @@ export default function PerfilTab() {
     const fetchPartidos = async () => {
       setLoading(true);
       try {
-        // 1️⃣ Buscar equipos del jugador
-        const { data: equipos, error: equiposError } = await supabase
-          .from("equipos")
-          .select("id_equipo")
-          .or(`id_jugador1.eq.${jugador.id_jugador},id_jugador2.eq.${jugador.id_jugador}`);
+        const { data: participaciones, error: participacionesError } = await supabase
+          .from<PartidoIdRow>("partido_jugador")
+          .select("id_partido")
+          .eq("id_jugador", jugador.id_jugador);
 
-        if (equiposError) throw equiposError;
-        if (!equipos?.length) {
+        if (participacionesError) throw participacionesError;
+
+        const partidoIds = Array.from(
+          new Set((participaciones ?? []).map((participacion) => participacion.id_partido)),
+        );
+
+        if (partidoIds.length === 0) {
           setPartidosPasados([]);
-          setLoading(false);
           return;
         }
 
-        const equipoIds = equipos.map((e) => e.id_equipo);
-
-        // 2️⃣ Buscar partidos donde el jugador participó (equipos 1 o 2)
         const { data, error } = await supabase
-          .from<Partido>("partidos")
-          .select(`
-            id_partido,
-            fecha,
-            hora,
-            fase,
-            resultado,
-            torneos (nombre, deporte, ubicacion),
-            equipo1:id_equipo1 (id_equipo, nombre),
-            equipo2:id_equipo2 (id_equipo, nombre)
-          `)
-          .or(equipoIds.map((id) => `id_equipo1.eq.${id},id_equipo2.eq.${id}`).join(","))
+          .from<PartidoRow>("partidos")
+          .select(
+            `id_partido,
+             fecha,
+             hora,
+             fase,
+             resultado,
+             ganador:jugadores!partidos_id_ganador_fkey (
+               id_jugador,
+               nombre,
+               apellido
+             ),
+             torneo:torneos (
+               nombre,
+               deporte,
+               ubicacion
+             ),
+             participantes:partido_jugador (
+               equipo,
+               jugador:jugadores (
+                 id_jugador,
+                 nombre,
+                 apellido
+               )
+             )`
+          )
+          .in("id_partido", partidoIds)
           .order("fecha", { ascending: false });
 
         if (error) throw error;
 
-        // 3️⃣ Filtrar partidos pasados
         const hoy = new Date();
-        const pasados = (data ?? []).filter((partido) => new Date(partido.fecha) < hoy);
+        const pasados = (data ?? [])
+          .map<Partido>((partido) => ({
+            id_partido: partido.id_partido,
+            fecha: partido.fecha,
+            hora: partido.hora,
+            fase: partido.fase,
+            resultado: partido.resultado,
+            ganador: partido.ganador ?? null,
+            torneo: partido.torneo ?? null,
+            participantes: Array.isArray(partido.participantes)
+              ? partido.participantes.map((participante) => ({
+                  equipo: participante.equipo,
+                  jugador: participante.jugador ?? null,
+                }))
+              : [],
+          }))
+          .filter((partido) => new Date(partido.fecha) < hoy);
+
         setPartidosPasados(pasados);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -88,10 +149,10 @@ export default function PerfilTab() {
       <View style={styles.stats}>
         <Text style={{ color: colors.text }}>Edad: {jugador?.edad ?? "—"}</Text>
         <Text style={{ color: colors.text }}>
-          Ranking Tenis: {jugador?.ranking_tennis ?? 0}
+          Ranking Tenis: {jugador?.rankingTennis ?? 0}
         </Text>
         <Text style={{ color: colors.text }}>
-          Ranking Pádel: {jugador?.ranking_paddle ?? 0}
+          Ranking Pádel: {jugador?.rankingPaddle ?? 0}
         </Text>
       </View>
 

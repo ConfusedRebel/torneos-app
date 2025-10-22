@@ -2,10 +2,35 @@ import React, { createContext, useContext } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Torneo } from '../types/torneo';
 
+type TorneoRow = {
+  id_torneo: string;
+  nombre: string;
+  deporte: string;
+  duo: boolean;
+  fecha_inicio: string;
+  fecha_fin: string;
+  ubicacion?: string | null;
+  ['ubicación']?: string | null;
+  estado: Torneo['estado'];
+};
+
+function mapTorneoRow(data: TorneoRow): Torneo {
+  return {
+    id_torneo: data.id_torneo,
+    nombre: data.nombre,
+    deporte: data.deporte,
+    duo: Boolean(data.duo),
+    fecha_inicio: data.fecha_inicio,
+    fecha_fin: data.fecha_fin,
+    ubicacion: data.ubicacion ?? data['ubicación'] ?? '',
+    estado: data.estado,
+  };
+}
+
 interface TorneosContextType {
   list(params?: { page?: number; pageSize?: number; search?: string }): Promise<Torneo[]>;
   get(id: string): Promise<Torneo | null>;
-  join(id_torneo: string, id_jugador: string): Promise<number>;
+  join(id_torneo: string, id_jugador: string): Promise<void>;
 }
 
 const TorneosContext = createContext<TorneosContextType | null>(null);
@@ -27,7 +52,7 @@ export function TorneosProvider({ children }: { children: React.ReactNode }) {
       return [];
     }
 
-    return data as Torneo[];
+    return (data ?? []).map(mapTorneoRow);
   }
 
   async function get(id: string) {
@@ -42,13 +67,13 @@ export function TorneosProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
 
-    return data as Torneo;
+    return data ? mapTorneoRow(data) : null;
   }
 
   async function join(id_torneo: string, id_jugador: string) {
     const { data: torneoData, error: torneoError } = await supabase
       .from('torneos')
-      .select('participantes, maxParticipantes, estado')
+      .select('estado')
       .eq('id_torneo', id_torneo)
       .single();
 
@@ -62,12 +87,8 @@ export function TorneosProvider({ children }: { children: React.ReactNode }) {
       throw new Error('TORNEO_NO_DISPONIBLE');
     }
 
-    if ((torneoData.participantes ?? 0) >= (torneoData.maxParticipantes ?? 0)) {
-      throw new Error('TORNEO_SIN_CUPOS');
-    }
-
     const { data: existingPlayer, error: existingError } = await supabase
-      .from('jugadores_torneos')
+      .from('participaciones')
       .select('id_jugador')
       .eq('id_torneo', id_torneo)
       .eq('id_jugador', id_jugador)
@@ -80,21 +101,10 @@ export function TorneosProvider({ children }: { children: React.ReactNode }) {
     }
 
     const { error: insertError } = await supabase
-      .from('jugadores_torneos')
+      .from('participaciones')
       .insert({ id_torneo, id_jugador });
 
     if (insertError) throw insertError;
-
-    const updatedCount = (torneoData.participantes ?? 0) + 1;
-
-    const { error: updateError } = await supabase
-      .from('torneos')
-      .update({ participantes: updatedCount })
-      .eq('id_torneo', id_torneo);
-
-    if (updateError) throw updateError;
-
-    return updatedCount;
   }
 
   return (

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { View, Text } from '@/components/Themed';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTorneos } from '@/providers/torneosProvider';
@@ -9,11 +9,33 @@ import type { Torneo } from '@/types/torneo';
 import type { Partido } from '@/types/partido';
 import { useAuth } from '@/providers/AuthProvider';
 
-type EquipoInscrito = {
-  id_equipo: string;
-  nombre: string;
-  id_jugador1: { nombre: string; apellido: string } | null;
-  id_jugador2: { nombre: string; apellido: string } | null;
+type ParticipanteInscrito = {
+  ranking_en_torneo: number | null;
+  jugador: { id_jugador: string; nombre: string; apellido: string } | null;
+};
+
+type TorneoDetailData = {
+  torneo: Torneo | null;
+  participantes: ParticipanteInscrito[];
+  partidos: Partido[];
+  registered: boolean;
+};
+
+type ParticipacionRow = ParticipanteInscrito;
+
+type PartidoJugadorRow = {
+  equipo: boolean;
+  jugador: { id_jugador: string; nombre: string; apellido: string } | null;
+};
+
+type PartidoRow = {
+  id_partido: string;
+  fecha: string;
+  hora: string;
+  fase?: string | null;
+  resultado?: string | null;
+  ganador?: { id_jugador: string; nombre: string; apellido: string } | null;
+  participantes?: PartidoJugadorRow[] | null;
 };
 
 export default function TorneoDetail() {
@@ -24,7 +46,7 @@ export default function TorneoDetail() {
   const { jugador } = useAuth();
 
   const [torneo, setTorneo] = useState<Torneo | null>(null);
-  const [equipos, setEquipos] = useState<EquipoInscrito[]>([]);
+  const [participantes, setParticipantes] = useState<ParticipanteInscrito[]>([]);
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRegistered, setIsRegistered] = useState(false);
@@ -33,98 +55,189 @@ export default function TorneoDetail() {
     null,
   );
 
-  useEffect(() => {
-    if (!id) return;
-    let isActive = true;
-    const fetchData = async () => {
-      setLoading(true);
+  const fetchDetails = useCallback(async (): Promise<TorneoDetailData> => {
+    if (!id) {
+      return { torneo: null, participantes: [], partidos: [], registered: false };
+    }
 
-      // 🔹 Obtener datos del torneo
-      const torneoData = await get(id);
-      if (!isActive) return;
-      setTorneo(torneoData);
-      if (torneoData?.nombre) navigation.setOptions({ title: torneoData.nombre });
+    const torneoData = await get(id);
+    const participantesData: ParticipanteInscrito[] = [];
+    const partidosData: Partido[] = [];
+    let registered = false;
 
-      // 🔹 Equipos inscritos
-      const { data: equiposData, error: equiposError } = await supabase
-        .from('equipos')
-        .select(`
-          id_equipo,
-          nombre,
-          id_jugador1 (nombre, apellido),
-          id_jugador2 (nombre, apellido)
-        `)
-        .eq('id_torneo', id);
+    const { data: participaciones, error: participacionesError } = await supabase
+      .from<ParticipacionRow>('participaciones')
+      .select(
+        `ranking_en_torneo,
+         jugador:jugadores (
+           id_jugador,
+           nombre,
+           apellido
+         )`
+      )
+      .eq('id_torneo', id);
 
-      if (equiposError) console.error('Error equipos:', equiposError.message);
-      else if (isActive) setEquipos((equiposData as EquipoInscrito[]) ?? []);
+    if (participacionesError) {
+      console.error('Error participaciones:', participacionesError.message);
+    } else if (participaciones) {
+      participaciones.forEach((participacion) => {
+        participantesData.push(participacion);
+      });
+    }
 
-      // 🔹 Partidos del torneo
-      const { data: partidosData, error: partidosError } = await supabase
-        .from('partidos')
-        .select(`
-          id_partido,
-          fecha,
-          hora,
-          fase,
-          resultado,
-          equipo1:id_equipo1 (nombre),
-          equipo2:id_equipo2 (nombre),
-          ganador:id_ganador (nombre)
-        `)
-        .eq('id_torneo', id)
-        .order('fecha', { ascending: true });
+    const { data: partidosRaw, error: partidosError } = await supabase
+      .from<PartidoRow>('partidos')
+      .select(
+        `id_partido,
+         fecha,
+         hora,
+         fase,
+         resultado,
+         ganador:jugadores!partidos_id_ganador_fkey (
+           id_jugador,
+           nombre,
+           apellido
+         ),
+         participantes:partido_jugador (
+           equipo,
+           jugador:jugadores (
+             id_jugador,
+             nombre,
+             apellido
+           )
+         )`
+      )
+      .eq('id_torneo', id)
+      .order('fecha', { ascending: true });
 
-      if (partidosError) console.error('Error partidos:', partidosError.message);
-      else if (isActive) setPartidos(partidosData ?? []);
+    if (partidosError) {
+      console.error('Error partidos:', partidosError.message);
+    } else if (partidosRaw) {
+      partidosRaw.forEach((partido) => {
+        partidosData.push({
+          id_partido: partido.id_partido,
+          fecha: partido.fecha,
+          hora: partido.hora,
+          fase: partido.fase,
+          resultado: partido.resultado,
+          ganador: partido.ganador ?? null,
+          participantes: Array.isArray(partido.participantes)
+            ? partido.participantes.map((participante) => ({
+                equipo: participante.equipo,
+                jugador: participante.jugador ?? null,
+              }))
+            : [],
+        });
+      });
+    }
 
-      if (jugador?.id_jugador) {
+    if (jugador?.id_jugador) {
+      registered = participantesData.some(
+        (participante) => participante.jugador?.id_jugador === jugador.id_jugador,
+      );
+
+      if (!registered) {
         const { data: registroData, error: registroError } = await supabase
-          .from('jugadores_torneos')
+          .from('participaciones')
           .select('id_jugador')
           .eq('id_torneo', id)
           .eq('id_jugador', jugador.id_jugador)
           .maybeSingle();
 
-        if (registroError) console.error('Error registro torneo:', registroError.message);
-        else if (isActive) setIsRegistered(Boolean(registroData));
-      } else if (isActive) {
-        setIsRegistered(false);
+        if (registroError) {
+          console.error('Error registro torneo:', registroError.message);
+        } else {
+          registered = Boolean(registroData);
+        }
       }
+    }
 
-      if (isActive) setLoading(false);
+    return {
+      torneo: torneoData,
+      participantes: participantesData,
+      partidos: partidosData,
+      registered,
     };
+  }, [get, id, jugador?.id_jugador]);
 
-    fetchData();
+  const applyDetails = useCallback(
+    (details: TorneoDetailData) => {
+      setTorneo(details.torneo);
+      if (details.torneo?.nombre) {
+        navigation.setOptions({ title: details.torneo.nombre });
+      }
+      setParticipantes(details.participantes);
+      setPartidos(details.partidos);
+      setIsRegistered(details.registered);
+    },
+    [navigation],
+  );
+
+  useEffect(() => {
+    let isActive = true;
+    setLoading(true);
+
+    fetchDetails()
+      .then((details) => {
+        if (!isActive) return;
+        applyDetails(details);
+      })
+      .catch((error) => {
+        console.error('Error cargando torneo:', error);
+      })
+      .finally(() => {
+        if (isActive) setLoading(false);
+      });
+
     return () => {
       isActive = false;
     };
-  }, [get, id, jugador?.id_jugador, navigation]);
+  }, [applyDetails, fetchDetails]);
 
-  const slotsAvailable = torneo ? Math.max(torneo.maxParticipantes - torneo.participantes, 0) : 0;
   const canJoin =
-    !!torneo &&
-    torneo.estado === 'pendiente' &&
-    slotsAvailable > 0 &&
-    !isRegistered &&
-    !!jugador?.id_jugador;
+    !!torneo && torneo.estado === 'pendiente' && !isRegistered && !!jugador?.id_jugador;
+
+  let joinHelpMessage = 'Las inscripciones ya no están disponibles.';
+  if (isRegistered) {
+    joinHelpMessage = 'Ya estás inscrito en este torneo.';
+  } else if (torneo?.estado === 'pendiente') {
+    joinHelpMessage = 'Pulsa el botón (+) para inscribirte.';
+  }
+
+  const joinSection = jugador ? (
+    <View style={styles.joinContainer}>
+      {joinMessage && (
+        <Text
+          style={[
+            styles.joinMessage,
+            joinMessage.type === 'error' ? styles.joinMessageError : styles.joinMessageSuccess,
+          ]}
+        >
+          {joinMessage.text}
+        </Text>
+      )}
+      <Text style={[styles.joinHelp, { color: colors.text }]}>{joinHelpMessage}</Text>
+    </View>
+  ) : (
+    <Text style={[styles.joinHelp, { color: colors.text, marginBottom: 12 }]}> 
+      Inicia sesión para inscribirte en este torneo.
+    </Text>
+  );
 
   const handleJoin = async () => {
     if (!torneo || !jugador?.id_jugador || isJoining || !id) return;
     setIsJoining(true);
     setJoinMessage(null);
     try {
-      const updatedParticipants = await join(id, jugador.id_jugador);
-      setTorneo((prev) => (prev ? { ...prev, participantes: updatedParticipants } : prev));
-      setIsRegistered(true);
+      await join(id, jugador.id_jugador);
+      const details = await fetchDetails();
+      applyDetails(details);
       setJoinMessage({ type: 'success', text: 'Te inscribiste correctamente en el torneo.' });
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message === 'YA_REGISTRADO'
             ? 'Ya estás inscrito en este torneo.'
-            : error.message === 'TORNEO_SIN_CUPOS'
-            ? 'No quedan cupos disponibles.'
             : error.message === 'TORNEO_NO_DISPONIBLE'
             ? 'Las inscripciones ya no están abiertas.'
             : error.message === 'TORNEO_NO_ENCONTRADO'
@@ -139,7 +252,7 @@ export default function TorneoDetail() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[styles.loaderContainer, { backgroundColor: colors.background }]}> 
         <ActivityIndicator size="large" color={colors.tint} />
       </View>
     );
@@ -147,7 +260,7 @@ export default function TorneoDetail() {
 
   if (!torneo) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.loaderContainer, { backgroundColor: colors.background }]}> 
         <Text style={{ color: colors.text, textAlign: 'center' }}>
           No se encontró información del torneo.
         </Text>
@@ -155,173 +268,164 @@ export default function TorneoDetail() {
     );
   }
 
-  return (
-    <ScrollView style={styles.container}>
-      {/* ========================== */}
-      {/* 🏆 DATOS DEL TORNEO */}
-      {/* ========================== */}
-      <Text style={[styles.title, { color: colors.text }]}>{torneo.nombre}</Text>
+  const formatEquipo = (equipo: Partido['participantes']) => {
+    const names = equipo
+      .map((participante) =>
+        participante.jugador
+          ? `${participante.jugador.nombre} ${participante.jugador.apellido}`
+          : 'Por definir',
+      )
+      .filter(Boolean)
+      .join(' / ');
 
-      {jugador ? (
-        <View style={styles.joinContainer}>
-          {joinMessage && (
-            <Text
-              style={[
-                styles.joinMessage,
-                joinMessage.type === 'error' ? styles.joinMessageError : styles.joinMessageSuccess,
-              ]}
-            >
-              {joinMessage.text}
-            </Text>
-          )}
-          <TouchableOpacity
-            accessibilityRole="button"
-            onPress={handleJoin}
-            disabled={!canJoin || isJoining}
+    return names || 'Por definir';
+  };
+
+  return (
+    <View style={[styles.screen, { backgroundColor: colors.background }]}> 
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={[styles.title, { color: colors.text }]}>{torneo.nombre}</Text>
+
+        {joinSection}
+
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: colors.text }]}>Deporte:</Text>
+          <Text style={[styles.value, { color: colors.text }]}>{torneo.deporte}</Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: colors.text }]}>Fechas:</Text>
+          <Text style={[styles.value, { color: colors.text }]}> 
+            {torneo.fecha_inicio} → {torneo.fecha_fin}
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: colors.text }]}>Ubicación:</Text>
+          <Text style={[styles.value, { color: colors.text }]}>{torneo.ubicacion}</Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: colors.text }]}>Modalidad:</Text>
+          <Text style={[styles.value, { color: colors.text }]}>
+            {torneo.duo ? 'Dobles' : 'Singles'}
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: colors.text }]}>Estado:</Text>
+          <Text
             style={[
-              styles.joinButton,
+              styles.value,
               {
-                backgroundColor:
-                  !canJoin || isJoining ? colors.border : colors.tint,
-                borderColor: colors.border,
+                color:
+                  torneo.estado === 'en_curso'
+                    ? colors.tint
+                    : torneo.estado === 'finalizado'
+                    ? '#888'
+                    : colors.text,
               },
             ]}
           >
-            <Text style={[styles.joinButtonText, { color: colors.background }]}> 
-              {isRegistered
-                ? 'Ya estás inscrito'
-                : isJoining
-                ? 'Inscribiéndote...'
-                : 'Inscribirme'}
-            </Text>
-          </TouchableOpacity>
-          <Text style={[styles.joinHelp, { color: colors.text }]}>Cupos disponibles: {slotsAvailable}</Text>
+            {torneo.estado}
+          </Text>
         </View>
-      ) : (
-        <Text style={[styles.joinHelp, { color: colors.text, marginBottom: 12 }]}>
-          Inicia sesión para inscribirte en este torneo.
-        </Text>
-      )}
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: colors.text }]}>Deporte:</Text>
-        <Text style={[styles.value, { color: colors.text }]}>{torneo.deporte}</Text>
-      </View>
+        <Text style={[styles.subtitle, { color: colors.text, marginTop: 20 }]}>Participantes</Text>
+        {participantes.length === 0 ? (
+          <Text style={{ color: colors.text, marginTop: 4 }}>No hay participantes registrados.</Text>
+        ) : (
+          participantes.map((participante, index) => (
+            <View
+              key={participante.jugador?.id_jugador ?? `participante-${index}`}
+              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+            >
+              <Text style={[styles.cardTitle, { color: colors.text }]}> 
+                {participante.jugador
+                  ? `${participante.jugador.nombre} ${participante.jugador.apellido}`
+                  : 'Participante sin datos'}
+              </Text>
+              {participante.ranking_en_torneo != null && (
+                <Text style={[styles.cardSubtitle, { color: colors.text }]}> 
+                  Ranking en torneo: {participante.ranking_en_torneo}
+                </Text>
+              )}
+            </View>
+          ))
+        )}
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: colors.text }]}>Fechas:</Text>
-        <Text style={[styles.value, { color: colors.text }]}>
-          {torneo.fecha_inicio} → {torneo.fecha_fin}
-        </Text>
-      </View>
+        <Text style={[styles.subtitle, { color: colors.text, marginTop: 20 }]}>Partidos</Text>
+        {partidos.length === 0 ? (
+          <Text style={{ color: colors.text, marginTop: 4 }}>No hay partidos registrados.</Text>
+        ) : (
+          partidos.map((partido) => {
+            const equipoA = partido.participantes.filter((participante) => participante.equipo);
+            const equipoB = partido.participantes.filter((participante) => !participante.equipo);
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: colors.text }]}>Ubicación:</Text>
-        <Text style={[styles.value, { color: colors.text }]}>{torneo.ubicacion}</Text>
-      </View>
+            return (
+              <View
+                key={partido.id_partido}
+                style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+              >
+                <Text style={[styles.cardTitle, { color: colors.text }]}> 
+                  {formatEquipo(equipoA)} vs {formatEquipo(equipoB)}
+                </Text>
+                <Text style={[styles.cardSubtitle, { color: colors.text }]}> 
+                  {partido.fecha} {partido.hora}
+                </Text>
+                <Text style={[styles.cardSubtitle, { color: colors.text }]}> 
+                  Fase: {partido.fase ?? '—'}
+                </Text>
+                {partido.resultado && (
+                  <Text style={[styles.cardSubtitle, { color: colors.text }]}> 
+                    Resultado: {partido.resultado}
+                  </Text>
+                )}
+                {partido.ganador?.nombre && (
+                  <Text style={[styles.cardSubtitle, { color: colors.tint, fontWeight: 'bold' }]}> 
+                    Ganador: {partido.ganador.nombre} {partido.ganador.apellido}
+                  </Text>
+                )}
+              </View>
+            );
+          })
+        )}
+      </ScrollView>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: colors.text }]}>Modalidad:</Text>
-        <Text style={[styles.value, { color: colors.text }]}>
-          {torneo.duo ? 'Dobles' : 'Singles'}
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: colors.text }]}>Estado:</Text>
-        <Text
+      {jugador && (
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={canJoin ? 'Inscribirme al torneo' : 'Inscripción no disponible'}
+          onPress={handleJoin}
+          disabled={!canJoin || isJoining}
           style={[
-            styles.value,
+            styles.fab,
             {
-              color:
-                torneo.estado === 'en_curso'
-                  ? colors.tint
-                  : torneo.estado === 'finalizado'
-                  ? '#888'
-                  : colors.text,
+              backgroundColor: !canJoin || isJoining ? colors.border : colors.tint,
+              borderColor: colors.border,
             },
           ]}
         >
-          {torneo.estado}
-        </Text>
-      </View>
-
-      {/* ========================== */}
-      {/* 🧑‍🤝‍🧑 EQUIPOS */}
-      {/* ========================== */}
-      <Text style={[styles.subtitle, { color: colors.text, marginTop: 20 }]}>Equipos</Text>
-
-      {equipos.length === 0 ? (
-        <Text style={{ color: colors.text, marginTop: 4 }}>No hay equipos registrados.</Text>
-      ) : (
-        equipos.map((eq) => (
-          <View
-            key={eq.id_equipo}
-            style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
-          >
-            <Text style={[styles.cardTitle, { color: colors.text }]}>{eq.nombre}</Text>
-            <Text style={[styles.cardSubtitle, { color: colors.text }]}>
-              {eq.id_jugador1?.nombre} {eq.id_jugador1?.apellido}
-              {eq.id_jugador2
-                ? ` / ${eq.id_jugador2.nombre} ${eq.id_jugador2.apellido}`
-                : ''}
-            </Text>
-          </View>
-        ))
+          <Text style={[styles.fabLabel, { color: colors.background }]}> 
+            {isJoining ? '…' : isRegistered ? '✓' : '+'}
+          </Text>
+        </TouchableOpacity>
       )}
-
-      {/* ========================== */}
-      {/* 🎾 PARTIDOS */}
-      {/* ========================== */}
-      <Text style={[styles.subtitle, { color: colors.text, marginTop: 20 }]}>Partidos</Text>
-
-      {partidos.length === 0 ? (
-        <Text style={{ color: colors.text, marginTop: 4 }}>No hay partidos registrados.</Text>
-      ) : (
-        partidos.map((p) => (
-          <View
-            key={p.id_partido}
-            style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
-          >
-            <Text style={[styles.cardTitle, { color: colors.text }]}>
-              {p.equipo1?.nombre} vs {p.equipo2?.nombre}
-            </Text>
-            <Text style={[styles.cardSubtitle, { color: colors.text }]}>
-              {p.fecha} {p.hora}
-            </Text>
-            <Text style={[styles.cardSubtitle, { color: colors.text }]}>
-              Fase: {p.fase ?? '—'}
-            </Text>
-            {p.resultado && (
-              <Text style={[styles.cardSubtitle, { color: colors.text }]}>
-                Resultado: {p.resultado}
-              </Text>
-            )}
-            {p.ganador?.nombre && (
-              <Text style={[styles.cardSubtitle, { color: colors.tint, fontWeight: 'bold' }]}>
-                Ganador: {p.ganador.nombre}
-              </Text>
-            )}
-          </View>
-        ))
-      )}
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  screen: { flex: 1 },
+  scrollContent: { padding: 16, paddingBottom: 96 },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 12 },
   joinContainer: { marginBottom: 16 },
-  joinButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  joinButtonText: { fontSize: 16, fontWeight: '600' },
   joinHelp: { fontSize: 14 },
   joinMessage: { fontSize: 14, marginBottom: 8 },
   joinMessageError: { color: '#d9534f' },
@@ -338,4 +442,21 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: 16, fontWeight: '600' },
   cardSubtitle: { fontSize: 14, marginTop: 2 },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 4,
+  },
+  fabLabel: { fontSize: 28, fontWeight: 'bold' },
 });

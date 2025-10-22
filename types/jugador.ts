@@ -4,6 +4,6 @@ export interface Jugador {
   apellido: string
   edad: number
   email: string
-  ranking_paddle: number
-  ranking_tennis: number
+  rankingPaddle: number
+  rankingTennis: number
 }
