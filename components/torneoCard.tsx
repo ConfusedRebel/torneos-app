@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { View, Text } from '@/components/Themed';
-import type { Torneo } from './../types/torneo';
+import type { Torneo } from '@/types/torneo';
 import { useTheme } from '@/hooks/useTheme';
 
 type Props = {
@@ -12,6 +12,9 @@ type Props = {
 
 function TorneoCardBase({ torneo, onPress, style }: Props) {
   const { colors } = useTheme();
+
+  const estadoColor =
+    torneo.estado === 'en_curso' ? colors.tint : torneo.estado === 'finalizado' ? '#888' : colors.text;
 
   return (
     <Pressable
@@ -28,11 +31,19 @@ function TorneoCardBase({ torneo, onPress, style }: Props) {
       accessibilityLabel={`Abrir ${torneo.nombre}`}
     >
       <View>
-        <Text style={[styles.cardTitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.nombre}</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.fecha_inicio}</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.ubicacion}</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.duo ? "duo" : "single" }</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{ torneo.participantes + "/" + torneo.maxParticipantes }</Text>
+        <Text style={[styles.cardTitle, { color: colors.text, backgroundColor: colors.card }]}>
+          {torneo.nombre}
+        </Text>
+        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>
+          {torneo.fecha_inicio} → {torneo.fecha_fin}
+        </Text>
+        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>
+          {torneo.ubicacion}
+        </Text>
+        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>
+          {torneo.deporte} · {torneo.duo ? 'Dobles' : 'Singles'}
+        </Text>
+        <Text style={[styles.cardSubtitle, { color: estadoColor, backgroundColor: colors.card }]}>Estado: {torneo.estado}</Text>
       </View>
     </Pressable>
   );

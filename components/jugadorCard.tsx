@@ -35,7 +35,7 @@ function JugadorCardBase({ jugador, onPress, style }: Props) {
           Edad: {jugador.edad}
         </Text>
         <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>
-          🎾 {jugador.ranking_tennis} | 🏓 {jugador.ranking_paddle}
+          🎾 {jugador.rankingTennis} | 🏓 {jugador.rankingPaddle}
         </Text>
       </View>
     </Pressable>

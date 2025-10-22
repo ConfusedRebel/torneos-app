@@ -2,6 +2,30 @@ import React, { createContext, useContext } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Jugador } from '../types/jugador';
 
+type JugadorRow = {
+  id_jugador: string;
+  nombre: string;
+  apellido: string;
+  edad: number;
+  email: string;
+  rankingPaddle?: number | null;
+  ranking_paddle?: number | null;
+  rankingTennis?: number | null;
+  ranking_tennis?: number | null;
+};
+
+function mapJugadorRow(data: JugadorRow): Jugador {
+  return {
+    id_jugador: data.id_jugador,
+    nombre: data.nombre,
+    apellido: data.apellido,
+    edad: data.edad,
+    email: data.email,
+    rankingPaddle: data.rankingPaddle ?? data.ranking_paddle ?? 0,
+    rankingTennis: data.rankingTennis ?? data.ranking_tennis ?? 0,
+  };
+}
+
 interface JugadoresContextType {
   list(params?: { page?: number; pageSize?: number; search?: string }): Promise<Jugador[]>;
   get(id: string): Promise<Jugador | null>;
@@ -28,7 +52,7 @@ export function JugadoresProvider({ children }: { children: React.ReactNode }) {
       return [];
     }
 
-    return data as Jugador[];
+    return (data ?? []).map(mapJugadorRow);
   }
 
   async function get(id: string) {
@@ -43,7 +67,7 @@ export function JugadoresProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
 
-    return data as Jugador;
+    return data ? mapJugadorRow(data) : null;
   }
 
   return (

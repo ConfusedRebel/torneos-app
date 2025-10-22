@@ -7,8 +7,6 @@ export interface Torneo {
   fecha_fin: string
   ubicacion: string
   estado: EstadoTorneo
-  participantes: number
-  maxParticipantes: number
 }
 
 export type EstadoTorneo = 'pendiente' | 'en_curso' | 'finalizado'

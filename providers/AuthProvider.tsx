@@ -4,6 +4,31 @@ import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { Jugador } from "@/types/jugador";
 
+type JugadorRow = {
+  id_jugador: string;
+  nombre: string;
+  apellido: string;
+  edad: number;
+  email: string;
+  rankingPaddle?: number | null;
+  ranking_paddle?: number | null;
+  rankingTennis?: number | null;
+  ranking_tennis?: number | null;
+};
+
+function mapJugador(data: JugadorRow | null): Jugador | null {
+  if (!data) return null;
+  return {
+    id_jugador: data.id_jugador,
+    nombre: data.nombre,
+    apellido: data.apellido,
+    edad: data.edad,
+    email: data.email,
+    rankingPaddle: data.rankingPaddle ?? data.ranking_paddle ?? 0,
+    rankingTennis: data.rankingTennis ?? data.ranking_tennis ?? 0,
+  };
+}
+
 type AuthData = {
   loading: boolean;
   session: Session | null;
@@ -52,7 +77,7 @@ export default function AuthProvider({ children }: Props) {
           .single();
 
         if (jugadorError) console.error(jugadorError);
-        setJugador(jugadorData || null);
+        setJugador(mapJugador(jugadorData));
       } else {
         router.replace("/(auth)/signin");
       }
@@ -72,7 +97,7 @@ export default function AuthProvider({ children }: Props) {
             .eq("user_id", session.user.id)
             .single();
 
-          setJugador(jugadorData || null);
+          setJugador(mapJugador(jugadorData));
           router.replace("/");
         } else {
           setJugador(null);

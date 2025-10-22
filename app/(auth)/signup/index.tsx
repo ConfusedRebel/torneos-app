@@ -54,8 +54,8 @@ export default function SignUp() {
           apellido: data.apellido,
           edad: data.edad,
           email: data.email,
-          ranking_paddle: 0,
-          ranking_tennis: 0,
+          rankingPaddle: 0,
+          rankingTennis: 0,
         },
       ]);
       if (insertError) throw insertError;

@@ -5,17 +5,22 @@ export interface Partido {
   hora: string;
   fase?: string | null;
   resultado?: string | null;
-  torneos: {
+  ganador?: {
+    id_jugador: string;
+    nombre: string;
+    apellido: string;
+  } | null;
+  torneo?: {
     nombre: string;
     deporte: string;
     ubicacion: string;
-  } | null; // 🔹 no array, es relación 1 a 1
-  equipo1: {
-    id_equipo: string;
-    nombre: string;
-  } | null; // 🔹 también relación 1 a 1
-  equipo2: {
-    id_equipo: string;
-    nombre: string;
   } | null;
+  participantes: Array<{
+    equipo: boolean;
+    jugador: {
+      id_jugador: string;
+      nombre: string;
+      apellido: string;
+    } | null;
+  }>;
 }
