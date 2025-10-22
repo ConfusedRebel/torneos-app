@@ -15,7 +15,7 @@ export default function TorneosTab() {
   const [isLoading, setIsLoading] = useState(true);
 
   const openTorneo = (id: string) =>
-    router.push({ pathname: '/torneos/[id]', params: { id } });
+    router.push({ pathname: '/torneos/torneoDetail', params: { id } });
   
 
   useEffect(() => {
