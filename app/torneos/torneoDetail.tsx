@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
 import { View, Text } from '@/components/Themed';
+import { TEXT_STYLES } from '@/constants/Text';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTorneos } from '@/providers/torneosProvider';
 import { supabase } from '@/lib/supabase';
@@ -19,6 +20,30 @@ type EquipoInscrito = {
   nombre: string;
   id_jugador1: { nombre: string; apellido: string } | null;
   id_jugador2: { nombre: string; apellido: string } | null;
+};
+
+type PlayerSummary = { nombre: string; apellido: string };
+
+type EquipoRow = {
+  id_equipo: string;
+  nombre: string;
+  id_jugador1?: PlayerSummary[] | null;
+  id_jugador2?: PlayerSummary[] | null;
+};
+
+type PartidoRelation = { id_equipo: string; nombre: string };
+type TorneoSummary = { nombre: string; deporte: string; ubicacion: string };
+
+type PartidoRow = {
+  id_partido: string;
+  torneos?: TorneoSummary | TorneoSummary[] | null;
+  fecha: string;
+  hora: string;
+  fase?: string | null;
+  resultado?: string | null;
+  equipo1?: PartidoRelation[] | null;
+  equipo2?: PartidoRelation[] | null;
+  ganador?: PartidoRelation[] | null;
 };
 
 export default function TorneoDetail() {
@@ -69,7 +94,8 @@ export default function TorneoDetail() {
         .then(({ data }) => {
           if (isActive && data) {
             // Supabase returns related rows as arrays; take first element or null to match EquipoInscrito
-            const mapped = (data as any[]).map((d) => ({
+            const equiposRaw = Array.isArray(data) ? (data as EquipoRow[]) : [];
+            const mapped = equiposRaw.map((d) => ({
               id_equipo: d.id_equipo,
               nombre: d.nombre,
               id_jugador1: d.id_jugador1?.[0] ?? null,
@@ -99,23 +125,33 @@ export default function TorneoDetail() {
         // handle error...
       } else if (partidosData) {
         // Map Supabase's relation-arrays to your Partido shape (take first element)
-        const mapped = partidosData.map((p: any) => ({
-          id_partido: p.id_partido,
-          torneos: p.torneos,
-          fecha: p.fecha,
-          hora: p.hora,
-          fase: p.fase,
-          resultado: p.resultado,
-          equipo1: p.equipo1?.[0]
-            ? { id_equipo: p.equipo1[0].id_equipo, nombre: p.equipo1[0].nombre }
-            : null,
-          equipo2: p.equipo2?.[0]
-            ? { id_equipo: p.equipo2[0].id_equipo, nombre: p.equipo2[0].nombre }
-            : null,
-          ganador: p.ganador?.[0]
-            ? { id_equipo: p.ganador[0].id_equipo, nombre: p.ganador[0].nombre }
-            : null,
-        })) as Partido[];
+        const partidosRaw = Array.isArray(partidosData)
+          ? (partidosData as PartidoRow[])
+          : [];
+
+        const mapped = partidosRaw.map((p) => {
+          const torneoDetalle = Array.isArray(p.torneos)
+            ? p.torneos?.[0] ?? null
+            : p.torneos ?? null;
+
+          return {
+            id_partido: p.id_partido,
+            torneos: torneoDetalle,
+            fecha: p.fecha,
+            hora: p.hora,
+            fase: p.fase ?? null,
+            resultado: p.resultado ?? null,
+            equipo1: p.equipo1?.[0]
+              ? { id_equipo: p.equipo1[0].id_equipo, nombre: p.equipo1[0].nombre }
+              : null,
+            equipo2: p.equipo2?.[0]
+              ? { id_equipo: p.equipo2[0].id_equipo, nombre: p.equipo2[0].nombre }
+              : null,
+            ganador: p.ganador?.[0]
+              ? { id_equipo: p.ganador[0].id_equipo, nombre: p.ganador[0].nombre }
+              : null,
+          };
+        }) as Partido[];
 
         if (isActive) setPartidos(mapped);
       };
@@ -210,6 +246,7 @@ export default function TorneoDetail() {
             {joinMessage && (
               <Text
                 style={[
+                  TEXT_STYLES.body,
                   styles.joinMessage,
                   joinMessage.type === 'error'
                     ? styles.joinMessageError
@@ -220,12 +257,14 @@ export default function TorneoDetail() {
               </Text>
             )}
 
-            <Text style={[styles.joinHelp, { color: colors.text }]}>
+            <Text style={[TEXT_STYLES.body, styles.joinHelp, { color: colors.text }]}>
               Cupos disponibles: {slotsAvailable}
             </Text>
           </View>
         ) : (
-          <Text style={[styles.joinHelp, { color: colors.text, marginBottom: 12 }]}>
+          <Text
+            style={[TEXT_STYLES.body, styles.joinHelp, { color: colors.text, marginBottom: 12 }]}
+          >
             Inicia sesión para inscribirte en este torneo.
           </Text>
         )}
@@ -234,33 +273,36 @@ export default function TorneoDetail() {
         {/* ℹ️ DETALLES DEL TORNEO */}
         {/* ========================== */}
         <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.text }]}>Deporte:</Text>
-          <Text style={[styles.value, { color: colors.text }]}>{torneo.deporte}</Text>
+          <Text style={[TEXT_STYLES.bodyBold, styles.label, { color: colors.text }]}>Deporte:</Text>
+          <Text style={[TEXT_STYLES.body, styles.value, { color: colors.text }]}>
+            {torneo.deporte}
+          </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.text }]}>Fechas:</Text>
-          <Text style={[styles.value, { color: colors.text }]}>
+          <Text style={[TEXT_STYLES.bodyBold, styles.label, { color: colors.text }]}>Fechas:</Text>
+          <Text style={[TEXT_STYLES.body, styles.value, { color: colors.text }]}>
             {torneo.fecha_inicio} → {torneo.fecha_fin}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.text }]}>Ubicación:</Text>
-          <Text style={[styles.value, { color: colors.text }]}>{torneo.ubicacion}</Text>
+          <Text style={[TEXT_STYLES.bodyBold, styles.label, { color: colors.text }]}>Ubicación:</Text>
+          <Text style={[TEXT_STYLES.body, styles.value, { color: colors.text }]}>{torneo.ubicacion}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.text }]}>Modalidad:</Text>
-          <Text style={[styles.value, { color: colors.text }]}>
+          <Text style={[TEXT_STYLES.bodyBold, styles.label, { color: colors.text }]}>Modalidad:</Text>
+          <Text style={[TEXT_STYLES.body, styles.value, { color: colors.text }]}>
             {torneo.duo ? 'Dobles' : 'Singles'}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.text }]}>Estado:</Text>
+          <Text style={[TEXT_STYLES.bodyBold, styles.label, { color: colors.text }]}>Estado:</Text>
           <Text
             style={[
+              TEXT_STYLES.body,
               styles.value,
               {
                 color:
@@ -279,10 +321,14 @@ export default function TorneoDetail() {
         {/* ========================== */}
         {/* 🧑‍🤝‍🧑 EQUIPOS */}
         {/* ========================== */}
-        <Text style={[styles.subtitle, { color: colors.text, marginTop: 20 }]}>Equipos</Text>
+        <Text
+          style={[TEXT_STYLES.headingLg, styles.subtitle, { color: colors.text, marginTop: 20 }]}
+        >
+          Equipos
+        </Text>
 
         {equipos.length === 0 ? (
-          <Text style={{ color: colors.text, marginTop: 4 }}>No hay equipos registrados.</Text>
+          <Text style={[TEXT_STYLES.body, { color: colors.text, marginTop: 4 }]}>No hay equipos registrados.</Text>
         ) : (
           equipos.map((eq) => (
             <View
@@ -292,8 +338,12 @@ export default function TorneoDetail() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
-              <Text style={[styles.cardTitle, { color: colors.text }]}>{eq.nombre}</Text>
-              <Text style={[styles.cardSubtitle, { color: colors.text }]}>
+              <Text
+                style={[TEXT_STYLES.headingSm, styles.cardTitle, { color: colors.text }]}
+              >
+                {eq.nombre}
+              </Text>
+              <Text style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text }]}>
                 {eq.id_jugador1?.nombre} {eq.id_jugador1?.apellido}
                 {eq.id_jugador2
                   ? ` / ${eq.id_jugador2.nombre} ${eq.id_jugador2.apellido}`
@@ -306,10 +356,14 @@ export default function TorneoDetail() {
         {/* ========================== */}
         {/* 🎾 PARTIDOS */}
         {/* ========================== */}
-        <Text style={[styles.subtitle, { color: colors.text, marginTop: 20 }]}>Partidos</Text>
+        <Text
+          style={[TEXT_STYLES.headingLg, styles.subtitle, { color: colors.text, marginTop: 20 }]}
+        >
+          Partidos
+        </Text>
 
         {partidos.length === 0 ? (
-          <Text style={{ color: colors.text, marginTop: 4 }}>No hay partidos registrados.</Text>
+          <Text style={[TEXT_STYLES.body, { color: colors.text, marginTop: 4 }]}>No hay partidos registrados.</Text>
         ) : (
           partidos.map((p) => (
             <View
@@ -319,17 +373,17 @@ export default function TorneoDetail() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
-              <Text style={[styles.cardTitle, { color: colors.text }]}>
+              <Text style={[TEXT_STYLES.headingSm, styles.cardTitle, { color: colors.text }]}>
                 {p.equipo1?.nombre} vs {p.equipo2?.nombre}
               </Text>
-              <Text style={[styles.cardSubtitle, { color: colors.text }]}>
+              <Text style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text }]}>
                 {p.fecha} {p.hora}
               </Text>
-              <Text style={[styles.cardSubtitle, { color: colors.text }]}>
+              <Text style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text }]}>
                 Fase: {p.fase ?? '—'}
               </Text>
               {p.resultado && (
-                <Text style={[styles.cardSubtitle, { color: colors.text }]}>
+                <Text style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text }]}>
                   Resultado: {p.resultado}
                 </Text>
               )}
@@ -361,7 +415,7 @@ export default function TorneoDetail() {
             activeOpacity={0.8}
             style={styles.fabButton}
           >
-            <Text style={[styles.fabText, { color: colors.background }]}>
+            <Text style={[TEXT_STYLES.fab, styles.fabText, { color: colors.background }]}>
               {isRegistered ? '✓' : isJoining ? '⏳' : '+'}
             </Text>
           </TouchableOpacity>
@@ -380,21 +434,15 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
     marginBottom: 8,
   },
   label: {
-    fontSize: 16,
-    fontWeight: 'bold',
     marginRight: 8,
   },
   value: {
-    fontSize: 16,
+    flexShrink: 1,
   },
   subtitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
     marginBottom: 8,
   },
   section: {
@@ -442,10 +490,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  fabText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
+  fabText: {},
   card: {
     padding: 12,
     borderRadius: 8,
@@ -453,11 +498,10 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   cardSubtitle: {
-    fontSize: 28,
+    marginTop: 4,
   },
   cardTitle: {
-    fontSize: 20,
-    fontWeight: 'condensedBold',
+    marginBottom: 4,
   }
 
 

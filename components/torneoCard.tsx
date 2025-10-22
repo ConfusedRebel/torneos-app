@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { View, Text } from '@/components/Themed';
 import type { Torneo } from './../types/torneo';
 import { useTheme } from '@/hooks/useTheme';
+import { TEXT_STYLES } from '@/constants/Text';
 
 type Props = {
   torneo: Torneo;
@@ -28,11 +29,31 @@ function TorneoCardBase({ torneo, onPress, style }: Props) {
       accessibilityLabel={`Abrir ${torneo.nombre}`}
     >
       <View>
-        <Text style={[styles.cardTitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.nombre}</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.fecha_inicio}</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.ubicacion}</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{torneo.duo ? "duo" : "single" }</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}>{ torneo.participantes + "/" + torneo.maxParticipantes }</Text>
+        <Text
+          style={[TEXT_STYLES.title, { color: colors.text, backgroundColor: colors.card }]}
+        >
+          {torneo.nombre}
+        </Text>
+        <Text
+          style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}
+        >
+          {torneo.fecha_inicio}
+        </Text>
+        <Text
+          style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}
+        >
+          {torneo.ubicacion}
+        </Text>
+        <Text
+          style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}
+        >
+          {torneo.duo ? 'duo' : 'single'}
+        </Text>
+        <Text
+          style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}
+        >
+          {`${torneo.participantes}/${torneo.maxParticipantes}`}
+        </Text>
       </View>
     </Pressable>
   );
@@ -51,6 +72,5 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   pressed: { opacity: 0.9 },
-  cardTitle: { fontSize: 18, fontWeight: 'bold' },
-  cardSubtitle: { fontSize: 14, marginTop: 4 },
+  cardSubtitle: { marginTop: 4 },
 });

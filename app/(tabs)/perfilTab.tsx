@@ -7,6 +7,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { PartidoCard } from "@/components/partidoCard";
 import type { Partido } from "@/types/partido";
+import { TEXT_STYLES } from "@/constants/Text";
 
 export default function PerfilTab() {
   const { colors } = useTheme();
@@ -80,23 +81,25 @@ export default function PerfilTab() {
             { borderColor: colors.border, backgroundColor: colors.card },
           ]}
         />
-        <Text style={[styles.title, { color: colors.text }]}>
+        <Text style={[TEXT_STYLES.headingSm, styles.title, { color: colors.text }]}>
           {jugador?.nombre} {jugador?.apellido}
         </Text>
       </View>
 
       <View style={styles.stats}>
-        <Text style={{ color: colors.text }}>Edad: {jugador?.edad ?? "—"}</Text>
-        <Text style={{ color: colors.text }}>
+        <Text style={[TEXT_STYLES.body, { color: colors.text }]}>Edad: {jugador?.edad ?? "—"}</Text>
+        <Text style={[TEXT_STYLES.body, { color: colors.text }]}>
           Ranking Tenis: {jugador?.ranking_tennis ?? 0}
         </Text>
-        <Text style={{ color: colors.text }}>
+        <Text style={[TEXT_STYLES.body, { color: colors.text }]}>
           Ranking Pádel: {jugador?.ranking_paddle ?? 0}
         </Text>
       </View>
 
       <View style={[styles.separator, { backgroundColor: colors.border }]} />
-      <Text style={[styles.subtitle, { color: colors.text }]}>Partidos Pasados</Text>
+      <Text style={[TEXT_STYLES.bodyBold, styles.subtitle, { color: colors.text }]}>
+        Partidos Pasados
+      </Text>
     </RNView>
   );
 
@@ -111,7 +114,7 @@ export default function PerfilTab() {
           keyExtractor={(item) => item.id_partido}
           renderItem={({ item }) => <PartidoCard partido={item} />}
           ListEmptyComponent={
-            <Text style={{ textAlign: "center", marginTop: 20, color: colors.text }}>
+            <Text style={[TEXT_STYLES.body, { textAlign: "center", marginTop: 20, color: colors.text }]}>
               No hay partidos pasados
             </Text>
           }
@@ -136,8 +139,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  title: { fontSize: 20, fontWeight: "bold", flexShrink: 1 },
+  title: { flexShrink: 1 },
   stats: { rowGap: 4, marginTop: 8 },
   separator: { height: 1, width: "100%", marginTop: 16, marginBottom: 10 },
-  subtitle: { fontSize: 16, fontWeight: "600", marginTop: 4 },
+  subtitle: { marginTop: 4 },
 });
