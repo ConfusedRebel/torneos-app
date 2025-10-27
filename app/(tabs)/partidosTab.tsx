@@ -36,7 +36,7 @@ export default function PartidosFuturosTab() {
         const equipoIds = equipos.map((e) => e.id_equipo);
 
         const { data, error } = await supabase
-          .from<Partido>("partidos")
+          .from("partidos")
           .select(`
             id_partido,
             fecha,
@@ -53,8 +53,14 @@ export default function PartidosFuturosTab() {
         if (error) throw error;
 
         const hoy = new Date();
-        const futuros = (data ?? []).filter((partido) => new Date(partido.fecha) >= hoy);
-        setPartidos(futuros);
+        const futuros = (data ?? []).filter((partido) => new Date(partido.fecha) >= hoy)
+        .map((p) => ({
+          ...p,
+          torneos: p.torneos?.[0],
+          equipo1: p.equipo1?.[0],
+          equipo2: p.equipo2?.[0],
+        }));
+        setPartidos(futuros); 
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         console.error("Error cargando partidos futuros:", message);

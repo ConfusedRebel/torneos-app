@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { z } from 'zod';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { supabase } from '@/lib/supabase';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TEXT_STYLES } from '@/constants/Text';
+
 
 const signInSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
@@ -31,16 +32,19 @@ export default function SignIn() {
     try {
       setLoading(true);
       setError(null);
-      
-      // TODO: ENVIAR DATOS A SUPABASE
 
-      const { error: loginError } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: loginError } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password
       });
 
       if (loginError) {
         throw loginError;
+      }
+
+      if (authData?.session) {
+        router.replace('/(tabs)/landingTab');
+      return 
       }
 
     } catch (err) {
@@ -52,6 +56,7 @@ export default function SignIn() {
 
   return (
       <View style={styles.container}>
+        <KeyboardAvoidingView>
         <Text style={[TEXT_STYLES.hero, styles.title]}>¡Hola de nuevo!</Text>
         <Text style={[TEXT_STYLES.subtitle, styles.subtitle]}>
           Inicia sesión para continuar usando la aplicación y gestionar tus tareas
@@ -136,6 +141,7 @@ export default function SignIn() {
             </Text>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </View>
   );
 }

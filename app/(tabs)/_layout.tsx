@@ -17,7 +17,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      initialRouteName="landingTab"
+      initialRouteName="perfilTab"
       screenOptions={{
         animation: 'fade',
         headerStyle: { backgroundColor: colors.card },
