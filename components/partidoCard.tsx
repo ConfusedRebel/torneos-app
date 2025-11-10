@@ -16,7 +16,7 @@ type Props = {
   style?: ViewStyle;
 };
 
-function PartidoCardBase({ partido, style }: Props) {
+function PartidoCardBase({ partido }: Props) {
   const { colors } = useTheme();
 
   // ✅ Safely access joined fields
@@ -39,32 +39,32 @@ function PartidoCardBase({ partido, style }: Props) {
         {
           backgroundColor: colors.card,
           shadowColor: colors.border,
+          flexDirection: "row",
         },
-        style,
       ]}
-    >
-      <Text style={[TEXT_STYLES.title, styles.cardTitle, { color: colors.text }]}>
-        {equipo1Nombre} vs {equipo2Nombre}
-      </Text>
-
-      <Text style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text }]}>
-        {fecha} - {partido.hora}
-      </Text>
-
-      <Text style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text }]}>
-        {ubicacion}
-      </Text>
-
-      <Text
-        style={[TEXT_STYLES.captionBold, styles.cardSubtitle, { color: colors.tint }]}
-      >
-      </Text>
-
-      {partido.resultado && (
-        <Text style={[TEXT_STYLES.detail, styles.cardResult, { color: colors.text }]}>
-          Resultado: {partido.resultado}
+    ><View
+      style={[
+        {
+          backgroundColor: colors.card,
+          shadowColor: colors.border,
+        }]}>
+        <Text style={[TEXT_STYLES.title, styles.cardTitle, { color: colors.text }]}>
+          {equipo1Nombre} vs {equipo2Nombre}
         </Text>
-      )}
+
+        <Text style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text }]}>
+          {fecha} - {partido.hora}
+        </Text>
+
+        <Text style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text }]}>
+          {ubicacion}
+        </Text>
+        {partido.resultado && (
+          <Text style={[TEXT_STYLES.detail, styles.cardResult, { color: colors.text }]}>
+            Resultado: {partido.resultado}
+          </Text>
+        )}
+      </View>
     </View>
   );
 }

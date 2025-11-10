@@ -1,8 +1,7 @@
 import { useEffect } from "react";
-import { StyleSheet, Image, FlatList, ActivityIndicator, View as RNView, TouchableOpacity } from "react-native";
+import { StyleSheet, FlatList, ActivityIndicator, View as RNView, TouchableOpacity } from "react-native";
 import { Text, View } from "@/components/Themed";
 import { useTheme } from "@/hooks/useTheme";
-import image from "@/assets/images/favicon.png";
 import { useAuth } from "@/providers/AuthProvider";
 import { PartidoCard } from "@/components/partidoCard";
 import { TEXT_STYLES } from "@/constants/Text";
@@ -24,13 +23,6 @@ export default function PerfilTab() {
   const Header = (
     <RNView>
       <View style={styles.headerRow}>
-        <Image
-          source={image}
-          style={[
-            styles.avatar,
-            { borderColor: colors.border, backgroundColor: colors.card },
-          ]}
-        />
         <Text style={[TEXT_STYLES.headingSm, styles.title, { color: colors.text }]}>
           {jugador?.nombre} {jugador?.apellido}
         </Text>
@@ -38,7 +30,7 @@ export default function PerfilTab() {
 
       <View style={styles.stats}>
         <Text style={[TEXT_STYLES.body, { color: colors.text }]}>
-          Edad: {jugador?.edad ?? "—"}
+          Miembro desde: {jugador?.antiguedad ?? "—"}
         </Text>
         <Text style={[TEXT_STYLES.body, { color: colors.text }]}>
           Ranking Tenis: {jugador?.ranking_tennis ?? 0}

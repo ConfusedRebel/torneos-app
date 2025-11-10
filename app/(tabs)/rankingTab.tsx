@@ -32,7 +32,7 @@ export default function JugadorTab() {
   const [jugadores, setJugadores] = useState<Jugador[]>([]);
   const [torneos, setTorneos] = useState<Torneo[]>([]);
   const [selectedTorneo, setSelectedTorneo] = useState<string | null>(null);
-  const [selectedSport, setSelectedSport] = useState<"tennis" | "paddle" | null>(null);
+  const [selectedSport, setSelectedSport] = useState<"tennis" | "paddle">("tennis");
   const [isLoading, setIsLoading] = useState(true);
 
   // ===============================
@@ -102,7 +102,7 @@ export default function JugadorTab() {
           selectedValue={selectedTorneo}
           onValueChange={(val) => {
             setSelectedTorneo(val);
-            setSelectedSport(null);
+            setSelectedSport("tennis");
           }}
           dropdownIconColor={colors.text}
           style={{ color: colors.text }}
@@ -131,7 +131,6 @@ export default function JugadorTab() {
           dropdownIconColor={colors.text}
           style={{ color: colors.text }}
         >
-          <Picker.Item label="Todos" value={null} />
           <Picker.Item label="Tennis" value="tennis" />
           <Picker.Item label="Paddle" value="paddle" />
         </Picker>
@@ -140,53 +139,121 @@ export default function JugadorTab() {
       {/* 🧑‍🤝‍🧑 Jugadores / Equipos */}
       {isLoading || loadingEquipos ? (
         <ActivityIndicator size="large" style={{ marginTop: 24 }} color={colors.tint} />
-      ) : showEquipos ? (
-        <FlatList
-          contentContainerStyle={styles.listContent}
-          data={equipos}
-          keyExtractor={(item) => item.id_equipo}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          renderItem={({ item, index }) => (
-            <RNView
-              style={[
-                styles.equipoCard,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
+      ) : showEquipos ? <FlatList
+        contentContainerStyle={styles.listContent}
+        data={equipos}
+        keyExtractor={(item) => item.id_equipo}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        renderItem={({ item, index }) => (
+          <RNView
+            style={[
+              styles.equipoCard,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                flexDirection: "row",
+                alignItems: "center",
+                borderRadius: 12,
+                padding: 10,
+                shadowColor: colors.text,
+                shadowOpacity: 0.1,
+                shadowRadius: 6,
+                elevation: 3,
+              },
+            ]}
+          >
+            {/* Left section (30%) */}
+            <View
+              style={{
+                width: "20%",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: colors.text,
+                borderRadius: 10,
+                paddingVertical: 14,
+              }}
             >
-              <Text style={[TEXT_STYLES.headingSm, { color: colors.text }]}>
-                {index + 1}. {item.nombre ?? "Equipo sin nombre"}
+              <Text
+                style={[
+                  TEXT_STYLES.headingSm,
+                  {
+                    color: colors.background,
+                    fontSize: 28,
+                    fontWeight: "bold",
+                  },
+                ]}
+              >
+                {index + 1}
               </Text>
-              <Text style={[TEXT_STYLES.body, { color: colors.text }]}>
-                Puntos: {item.puntos ?? 0}
+            </View>
+
+            {/* Right section (70%) */}
+            <View
+              style={{
+                width: "70%",
+                paddingHorizontal: 14,
+                justifyContent: "center",
+                backgroundColor: colors.card,
+              }}
+            >
+              <Text
+                style={[
+                  TEXT_STYLES.headingSm,
+                  { color: colors.text, fontWeight: "600", fontSize: 18 },
+                ]}
+              >
+                {item.nombre ?? "Equipo sin nombre"}
               </Text>
-              <Text style={[TEXT_STYLES.caption, { color: colors.text }]}>
+
+              <Text style={[TEXT_STYLES.body, { color: colors.text + "AA" }]}>
                 {item.id_jugador1?.nombre} {item.id_jugador1?.apellido}
                 {item.id_jugador2
                   ? ` / ${item.id_jugador2.nombre} ${item.id_jugador2.apellido}`
                   : ""}
               </Text>
-            </RNView>
-          )}
-          ListEmptyComponent={
-            <Text style={[TEXT_STYLES.body, styles.empty, { color: colors.text }]}>
-              No hay equipos para mostrar
-            </Text>
-          }
-        />
-      ) : (
-        <FlatList
-          contentContainerStyle={styles.listContent}
-          data={dataToShow as Jugador[]}
-          keyExtractor={(item) => item.id_jugador}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          renderItem={({ item }) => <JugadorCard jugador={item} />}
-          ListEmptyComponent={
-            <Text style={[TEXT_STYLES.body, styles.empty, { color: colors.text }]}>
-              No hay jugadores para mostrar
-            </Text>
-          }
-        />
-      )}
+
+              <View
+                style={{
+                  marginTop: 6,
+                  backgroundColor: colors.text,
+                  alignSelf: "flex-start",
+                  paddingVertical: 4,
+                  paddingHorizontal: 8,
+                  borderRadius: 6,
+                }}
+              >
+                <Text
+                  style={[
+                    TEXT_STYLES.caption,
+                    { color: colors.background, fontWeight: "bold" },
+                  ]}
+                >
+                  {item.puntos ?? 0} pts
+                </Text>
+              </View>
+            </View>
+          </RNView>
+        )}
+        ListEmptyComponent={
+          <Text style={[TEXT_STYLES.body, styles.empty, { color: colors.text }]}>
+            No hay equipos para mostrar
+          </Text>
+        }
+      />
+        : (
+          <FlatList
+            contentContainerStyle={styles.listContent}
+            data={dataToShow as Jugador[]}
+            keyExtractor={(item) => item.id_jugador}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            renderItem={({ item }) => <JugadorCard jugador={item} />}
+            ListEmptyComponent={
+              <Text style={[TEXT_STYLES.body, styles.empty, { color: colors.text }]}>
+                No hay jugadores para mostrar
+              </Text>
+            }
+          />
+        )}
     </View>
   );
 }

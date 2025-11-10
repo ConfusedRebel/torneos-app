@@ -46,7 +46,6 @@ export type Database = {
           id_torneo: string
           nombre: string | null
           puntos: number | null
-          ranking_en_torneo: number | null
         }
         Insert: {
           id_equipo?: string
@@ -55,7 +54,6 @@ export type Database = {
           id_torneo: string
           nombre?: string | null
           puntos?: number | null
-          ranking_en_torneo?: number | null
         }
         Update: {
           id_equipo?: string
@@ -64,7 +62,6 @@ export type Database = {
           id_torneo?: string
           nombre?: string | null
           puntos?: number | null
-          ranking_en_torneo?: number | null
         }
         Relationships: [
           {

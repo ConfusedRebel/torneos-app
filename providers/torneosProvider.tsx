@@ -99,7 +99,6 @@ export const TorneosProvider = ({ children }: { children: React.ReactNode }) => 
       id_jugador1,
       id_jugador2,
       puntos: 0,
-      ranking_en_torneo: 0,
     } satisfies TablesInsert<"equipos">); // ✅ ensures compile-time match
 
     if (insertError) throw insertError;

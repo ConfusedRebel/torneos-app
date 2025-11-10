@@ -24,6 +24,10 @@ type EstadoFilter = "all" | "pendiente" | "en_curso" | "finalizado";
 type ModalidadFilter = "all" | "single" | "doble";
 type DeporteFilter = "all" | "paddle" | "tennis";
 
+function capitalize(str : string) {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
 export default function TorneosTab() {
   const { colors } = useTheme();
   const { list } = useTorneos();
@@ -89,7 +93,7 @@ export default function TorneosTab() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* 🔍 Search Bar */}
-      <RNView style={styles.filterBar}>
+      <RNView style={[styles.filterBar, {bottom : 5}]}>
         <TextInput
           value={query}
           onChangeText={setQuery}
@@ -115,7 +119,7 @@ export default function TorneosTab() {
       </RNView>
 
       {/* 🧩 Filters */}
-      <RNView style={{ paddingHorizontal: 16 }}>
+      <RNView style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
         <RNView style={styles.filtersRow}>
           {/* Estado */}
           <RNView
@@ -124,7 +128,15 @@ export default function TorneosTab() {
               { borderColor: colors.border, backgroundColor: colors.card },
             ]}
           >
-            <Text style={[styles.filterLabel, { color: colors.text }]}>{estado}</Text>
+            <Text style={[styles.filterLabel, { color: colors.text }]}>
+              {estado === "pendiente"
+                ? "Pendiente"
+                : estado === "en_curso"
+                  ? "En curso"
+                  : estado === "finalizado"
+                    ? "Finalizado"
+                    : "Todos"}
+            </Text>
             <Picker
               selectedValue={estado}
               onValueChange={(v: EstadoFilter) => setEstado(v)}
@@ -145,7 +157,7 @@ export default function TorneosTab() {
               { borderColor: colors.border, backgroundColor: colors.card },
             ]}
           >
-            <Text style={[styles.filterLabel, { color: colors.text }]}>{modalidad}</Text>
+            <Text style={[styles.filterLabel, { color: colors.text }]}>{modalidad == "all"? "Todos" : capitalize(modalidad)}</Text>
             <Picker
               selectedValue={modalidad}
               onValueChange={(v: ModalidadFilter) => setModalidad(v)}
@@ -165,7 +177,7 @@ export default function TorneosTab() {
               { borderColor: colors.border, backgroundColor: colors.card },
             ]}
           >
-            <Text style={[styles.filterLabel, { color: colors.text }]}>{deporte}</Text>
+            <Text style={[styles.filterLabel, { color: colors.text }]}>{deporte == "all"? "Todos" : capitalize(deporte)}</Text>
             <Picker
               selectedValue={deporte}
               onValueChange={(v: DeporteFilter) => setDeporte(v)}

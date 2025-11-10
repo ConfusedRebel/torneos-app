@@ -1,12 +1,12 @@
 import { memo } from 'react';
 import { Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { View, Text } from '@/components/Themed';
-import type { Torneo } from './../types/torneo';
 import { useTheme } from '@/hooks/useTheme';
 import { TEXT_STYLES } from '@/constants/Text';
+import { Tables } from '@/types/supabase'
 
 type Props = {
-  torneo: Torneo;
+  torneo: Tables<'torneos'>;
   onPress?: (id: string) => void;
   style?: ViewStyle;
 };
@@ -52,7 +52,6 @@ function TorneoCardBase({ torneo, onPress, style }: Props) {
         <Text
           style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}
         >
-          {`${torneo.participantes}/${torneo.maxParticipantes}`}
         </Text>
       </View>
     </Pressable>
