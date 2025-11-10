@@ -1,7 +1,6 @@
 import { StyleSheet, ScrollView } from "react-native";
-import { Text, View } from "@/components/Themed";
+import { View } from "@/components/Themed";
 import { useTheme } from "@/hooks/useTheme";
-import { TEXT_STYLES } from "@/constants/Text";
 import { NoticiaCard } from "@/components/noticiaCard";
 
 export default function LandingTab() {
