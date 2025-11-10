@@ -1,76 +1,94 @@
-import { StyleSheet, FlatList, ActivityIndicator, TextInput, View as RNView, TouchableOpacity } from 'react-native';
-import { Text, View } from '@/components/Themed';
-import { TorneoCard } from '@/components/torneoCard';
-import type { Torneo } from '@/types/torneo';
-import { router } from 'expo-router';
-import { useTheme } from '@/hooks/useTheme';
-import { useTorneos } from '@/providers/torneosProvider';
-import React, { useEffect, useState } from 'react';
-import { TEXT_STYLES } from '@/constants/Text';
-import { Picker } from '@react-native-picker/picker';
+import {
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  TextInput,
+  View as RNView,
+  TouchableOpacity,
+} from "react-native";
+import { Text, View } from "@/components/Themed";
+import { TorneoCard } from "@/components/torneoCard";
+import { router } from "expo-router";
+import { useTheme } from "@/hooks/useTheme";
+import { useTorneos } from "@/providers/torneosProvider";
+import { useEffect, useState } from "react";
+import { TEXT_STYLES } from "@/constants/Text";
+import { Picker } from "@react-native-picker/picker";
+import { useAuth } from "@/providers/AuthProvider";
+import { Ionicons } from "@expo/vector-icons";
+import type { Tables } from "@/types/supabase"; // ✅ Supabase generated types
 
-type EstadoFilter = 'all' | 'pendiente' | 'en_curso' | 'finalizado';
-type ModalidadFilter = 'all' | 'single' | 'doble';
-type DeporteFilter = 'all' | 'paddle' | 'tennis';
+type Torneo = Tables<"torneos">;
+
+type EstadoFilter = "all" | "pendiente" | "en_curso" | "finalizado";
+type ModalidadFilter = "all" | "single" | "doble";
+type DeporteFilter = "all" | "paddle" | "tennis";
 
 export default function TorneosTab() {
   const { colors } = useTheme();
   const { list } = useTorneos();
+  const { rol } = useAuth();
 
   const [torneos, setTorneos] = useState<Torneo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [query, setQuery] = useState('');
+  // 🔍 Search + debounce
+  const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState(query);
   useEffect(() => {
     const t = setTimeout(() => setDebounced(query), 300);
     return () => clearTimeout(t);
   }, [query]);
 
-  const [estado, setEstado] = useState<EstadoFilter>('all');
-  const [modalidad, setModalidad] = useState<ModalidadFilter>('all'); // single/doble
-  const [deporte, setDeporte] = useState<DeporteFilter>('all');       // paddle/tennis
+  // 🧩 Filters
+  const [estado, setEstado] = useState<EstadoFilter>("all");
+  const [modalidad, setModalidad] = useState<ModalidadFilter>("all");
+  const [deporte, setDeporte] = useState<DeporteFilter>("all");
 
-  const openTorneo = (id: string) =>
-    router.push({ pathname: '/torneos/torneoDetail', params: { id } });
+  // ✅ updated to match new dynamic route /torneos/[id]
+  const openTorneo = (id_torneo: string) => {
+    router.push(`/torneos/${id_torneo}`);
+  };
 
   useEffect(() => {
-    const load = async () => {
+    const loadTorneos = async () => {
       try {
         setIsLoading(true);
 
-        // Si tu provider soporta estos filtros, se los pasamos:
-        const params: any = {
+        const params = {
           search: debounced || undefined,
-          estado: estado === 'all' ? undefined : estado,
+          estado: estado === "all" ? undefined : (estado as Torneo["estado"]),
+          fechaDesde: undefined,
+          fechaHasta: undefined,
         };
-        if (modalidad !== 'all') params.duo = modalidad === 'doble'; // true = dobles
-        if (deporte !== 'all') params.deporte = deporte;            // 'paddle' | 'tennis'
 
         const data = await list(params);
 
-        // Fallback: si el provider ignora duo/deporte, filtramos acá
+        // Client-side filters
         let filtered = data;
-        if (modalidad !== 'all') {
-          filtered = filtered.filter(t => (modalidad === 'doble' ? t.duo : !t.duo));
+        if (modalidad !== "all") {
+          filtered = filtered.filter((t) => (modalidad === "doble" ? t.duo : !t.duo));
         }
-        if (deporte !== 'all') {
-          filtered = filtered.filter(t => t.deporte?.toLowerCase() === deporte);
+        if (deporte !== "all") {
+          filtered = filtered.filter(
+            (t) => t.deporte?.toLowerCase() === deporte.toLowerCase()
+          );
         }
 
         setTorneos(filtered);
-      } catch (e) {
-        console.error('Error loading torneos', e);
+      } catch (err) {
+        console.error("Error loading torneos:", err);
       } finally {
         setIsLoading(false);
       }
     };
-    load();
+
+    loadTorneos();
   }, [debounced, estado, modalidad, deporte]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Search */}
+      {/* 🔍 Search Bar */}
       <RNView style={styles.filterBar}>
         <TextInput
           value={query}
@@ -79,21 +97,33 @@ export default function TorneosTab() {
           placeholderTextColor="#999"
           style={[
             styles.input,
-            { backgroundColor: colors.card, color: colors.text, borderColor: colors.border },
+            {
+              backgroundColor: colors.card,
+              color: colors.text,
+              borderColor: colors.border,
+            },
           ]}
           autoCapitalize="none"
           returnKeyType="search"
         />
-        <TouchableOpacity onPress={() => setQuery('')} style={[styles.clearBtn, { borderColor: colors.border }]}>
+        <TouchableOpacity
+          onPress={() => setQuery("")}
+          style={[styles.clearBtn, { borderColor: colors.border }]}
+        >
           <Text style={{ color: colors.text }}>✕</Text>
         </TouchableOpacity>
       </RNView>
 
-      {/* Filtros en una fila: Estado | Modalidad | Deporte */}
+      {/* 🧩 Filters */}
       <RNView style={{ paddingHorizontal: 16 }}>
         <RNView style={styles.filtersRow}>
           {/* Estado */}
-          <RNView style={[styles.filterCol, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <RNView
+            style={[
+              styles.filterCol,
+              { borderColor: colors.border, backgroundColor: colors.card },
+            ]}
+          >
             <Text style={[styles.filterLabel, { color: colors.text }]}>{estado}</Text>
             <Picker
               selectedValue={estado}
@@ -109,7 +139,12 @@ export default function TorneosTab() {
           </RNView>
 
           {/* Modalidad */}
-          <RNView style={[styles.filterCol, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <RNView
+            style={[
+              styles.filterCol,
+              { borderColor: colors.border, backgroundColor: colors.card },
+            ]}
+          >
             <Text style={[styles.filterLabel, { color: colors.text }]}>{modalidad}</Text>
             <Picker
               selectedValue={modalidad}
@@ -124,7 +159,12 @@ export default function TorneosTab() {
           </RNView>
 
           {/* Deporte */}
-          <RNView style={[styles.filterCol, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <RNView
+            style={[
+              styles.filterCol,
+              { borderColor: colors.border, backgroundColor: colors.card },
+            ]}
+          >
             <Text style={[styles.filterLabel, { color: colors.text }]}>{deporte}</Text>
             <Picker
               selectedValue={deporte}
@@ -140,6 +180,7 @@ export default function TorneosTab() {
         </RNView>
       </RNView>
 
+      {/* 📋 Torneos list */}
       {isLoading ? (
         <ActivityIndicator size="large" color={colors.tint} />
       ) : (
@@ -151,11 +192,29 @@ export default function TorneosTab() {
           )}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <Text style={[TEXT_STYLES.body, { color: colors.text, textAlign: 'center', marginTop: 24 }]}>
+            <Text
+              style={[
+                TEXT_STYLES.body,
+                { color: colors.text, textAlign: "center", marginTop: 24 },
+              ]}
+            >
               No hay torneos por ahora
             </Text>
           }
         />
+      )}
+
+      {/* ➕ FAB visible only for admin */}
+      {rol === "admin" && (
+        <TouchableOpacity
+          onPress={() => router.push("/torneos/createTorneo")}
+          style={[
+            styles.fab,
+            { backgroundColor: colors.tint, borderColor: colors.border },
+          ]}
+        >
+          <Ionicons name="add" size={28} color="#fff" />
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -163,21 +222,52 @@ export default function TorneosTab() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 12 },
-  list: { paddingHorizontal: 16, paddingBottom: 50 },
-  filterBar: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 8 },
-  input: { flex: 1, height: 42, borderRadius: 10, borderWidth: 1, paddingHorizontal: 12 },
-  clearBtn: { height: 42, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, justifyContent: 'center' },
-
-  // ---- nuevos estilos ----
-  filtersRow: { flexDirection: 'row', gap: 8 },
+  list: { paddingHorizontal: 16, paddingBottom: 80 },
+  filterBar: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  input: {
+    flex: 1,
+    height: 42,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+  },
+  clearBtn: {
+    height: 42,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    justifyContent: "center",
+  },
+  filtersRow: { flexDirection: "row", gap: 8 },
   filterCol: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 10,
     height: 48,
   },
   filterLabel: { fontSize: 14, marginRight: 8 },
+  fab: {
+    position: "absolute",
+    bottom: 20,
+    left: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.5,
+    elevation: 5,
+  },
 });

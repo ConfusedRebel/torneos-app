@@ -14,8 +14,7 @@ const signInSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
   password: z
     .string()
-    .min(6, 'La contraseña debe tener al menos 6 caracteres')
-    .max(50, 'La contraseña es demasiado larga'),
+    .min( 1, 'Contraseña vacia')
 });
 
 type SignInForm = z.infer<typeof signInSchema>;
@@ -59,7 +58,7 @@ export default function SignIn() {
         <KeyboardAvoidingView>
         <Text style={[TEXT_STYLES.hero, styles.title]}>¡Hola de nuevo!</Text>
         <Text style={[TEXT_STYLES.subtitle, styles.subtitle]}>
-          Inicia sesión para continuar usando la aplicación y gestionar tus tareas
+          Iniciar sesión
         </Text>
 
         <View style={styles.form}>
@@ -73,7 +72,7 @@ export default function SignIn() {
                   <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
                   <TextInput
                     style={[TEXT_STYLES.body, styles.input]}
-                    placeholder="leandro@gmail.com"
+                    placeholder="gonzales@gmail.com"
                     placeholderTextColor="#999"
                     autoCapitalize="none"
                     keyboardType="email-address"
@@ -120,7 +119,7 @@ export default function SignIn() {
             <Text style={[TEXT_STYLES.bodyBold, styles.linkText]}>¿Has olvidado tu contraseña?</Text>
           </View>
 
-          {error && <Text style={[TEXT_STYLES.body, styles.errorText]}>{error}</Text>}
+          {error && <Text style={[TEXT_STYLES.body, styles.errorText]}>{"Correo electronico o contraseña incorrecta"}</Text>}
 
           <TouchableOpacity 
             style={styles.button}

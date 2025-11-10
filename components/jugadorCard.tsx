@@ -1,9 +1,12 @@
-import { memo } from 'react';
-import { Pressable, StyleSheet, ViewStyle } from 'react-native';
-import { View, Text } from '@/components/Themed';
-import type { Jugador } from '@/types/jugador';
-import { useTheme } from '@/hooks/useTheme';
-import { TEXT_STYLES } from '@/constants/Text';
+import { memo } from "react";
+import { Pressable, StyleSheet, ViewStyle } from "react-native";
+import { View, Text } from "@/components/Themed";
+import { useTheme } from "@/hooks/useTheme";
+import { TEXT_STYLES } from "@/constants/Text";
+import { router } from "expo-router"; // ✅ import router
+import type { Tables } from "@/types/supabase";
+
+type Jugador = Tables<"jugadores">;
 
 type Props = {
   jugador: Jugador;
@@ -14,9 +17,22 @@ type Props = {
 function JugadorCardBase({ jugador, onPress, style }: Props) {
   const { colors } = useTheme();
 
+  // ✅ Navigate automatically if no custom onPress is provided
+  const handlePress = () => {
+    if (onPress) {
+      onPress(jugador.id_jugador);
+    } else {
+      router.push({
+        pathname: "/jugadores/[id]",
+        params: { id: jugador.id_jugador },
+      });
+
+    }
+  };
+
   return (
     <Pressable
-      onPress={() => onPress?.(jugador.id_jugador)}
+      onPress={handlePress}
       android_ripple={{ borderless: false, color: colors.border }}
       style={({ pressed }) => [
         styles.card,
@@ -30,19 +46,22 @@ function JugadorCardBase({ jugador, onPress, style }: Props) {
     >
       <View>
         <Text
-          style={[TEXT_STYLES.title, { color: colors.text, backgroundColor: colors.card }]}
+          style={[
+            TEXT_STYLES.title,
+            { color: colors.text, backgroundColor: colors.card },
+          ]}
         >
           {jugador.nombre} {jugador.apellido}
         </Text>
+
         <Text
-          style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}
+          style={[
+            TEXT_STYLES.caption,
+            styles.cardSubtitle,
+            { color: colors.text, backgroundColor: colors.card },
+          ]}
         >
-          Edad: {jugador.edad}
-        </Text>
-        <Text
-          style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text, backgroundColor: colors.card }]}
-        >
-          🎾 {jugador.ranking_tennis} | 🏓 {jugador.ranking_paddle}
+          🎾 {jugador.ranking_tennis ?? 0} | 🏓 {jugador.ranking_paddle ?? 0}
         </Text>
       </View>
     </Pressable>
@@ -61,10 +80,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 3,
   },
-  pressed: {
-    opacity: 0.9,
-  },
-  cardSubtitle: {
-    marginTop: 4,
-  },
+  pressed: { opacity: 0.9 },
+  cardSubtitle: { marginTop: 4 },
 });

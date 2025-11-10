@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Link, router } from "expo-router";
 import { z } from "zod";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, type TextInputProps } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, type TextInputProps, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -77,132 +77,122 @@ export default function SignUp() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={[TEXT_STYLES.hero, styles.title]}>¡Registra tu cuenta!</Text>
-        <Text style={[TEXT_STYLES.subtitle, styles.subtitle]}>
-          Hola, debes iniciar sesión primero para poder usar la aplicación y disfrutar de todas las funciones.
-        </Text>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.container}>
+            <Text style={[TEXT_STYLES.hero, styles.title]}>¡Registra tu cuenta!</Text>
 
-        <View style={styles.form}>
-          {/* Nombre */}
-          <Controller
-            control={control}
-            name="nombre"
-            render={({ field: { onChange, value } }) => (
-              <InputField
-                label="Nombre"
-                icon="person-outline"
-                placeholder="Leandro"
-                value={value}
-                onChangeText={onChange}
-                error={errors.nombre?.message}
+            <View style={styles.form}>
+              {/* Nombre */}
+              <Controller
+                control={control}
+                name="nombre"
+                render={({ field: { onChange, value } }) => (
+                  <InputField
+                    label="Nombre"
+                    icon="person-outline"
+                    placeholder="María"
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.nombre?.message}
+                  />
+                )}
               />
-            )}
-          />
 
-          {/* Apellido */}
-          <Controller
-            control={control}
-            name="apellido"
-            render={({ field: { onChange, value } }) => (
-              <InputField
-                label="Apellido"
-                icon="person-outline"
-                placeholder="Pérez"
-                value={value}
-                onChangeText={onChange}
-                error={errors.apellido?.message}
+              {/* Apellido */}
+              <Controller
+                control={control}
+                name="apellido"
+                render={({ field: { onChange, value } }) => (
+                  <InputField
+                    label="Apellido"
+                    icon="person-outline"
+                    placeholder="Gonzáles"
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.apellido?.message}
+                  />
+                )}
               />
-            )}
-          />
-
-          {/* Edad */}
-          <Controller
-            control={control}
-            name="edad"
-            render={({ field: { onChange, value } }) => (
-              <InputField
-                label="Edad"
-                icon="calendar-outline"
-                placeholder="18"
-                keyboardType="numeric"
-                value={value?.toString()}
-                onChangeText={onChange}
-                error={errors.edad?.message}
+              {/* Correo */}
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, value } }) => (
+                  <InputField
+                    label="Correo electrónico"
+                    icon="mail-outline"
+                    placeholder="gonzales@gmail.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.email?.message}
+                  />
+                )}
               />
-            )}
-          />
 
-          {/* Correo */}
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, value } }) => (
-              <InputField
-                label="Correo electrónico"
-                icon="mail-outline"
-                placeholder="leandro@gmail.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={value}
-                onChangeText={onChange}
-                error={errors.email?.message}
+              {/* Contraseña */}
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, value } }) => (
+                  <InputField
+                    label="Contraseña"
+                    icon="lock-closed-outline"
+                    placeholder="********"
+                    secureTextEntry
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.password?.message}
+                  />
+                )}
               />
-            )}
-          />
 
-          {/* Contraseña */}
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, value } }) => (
-              <InputField
-                label="Contraseña"
-                icon="lock-closed-outline"
-                placeholder="********"
-                secureTextEntry
-                value={value}
-                onChangeText={onChange}
-                error={errors.password?.message}
-              />
-            )}
-          />
+              {/* Botón */}
+              <TouchableOpacity
+                style={[styles.button, loading && { opacity: 0.6 }]}
+                onPress={handleSubmit(onSubmit)}
+                disabled={loading}
+              >
+                <Text style={[TEXT_STYLES.button, styles.buttonText]}>
+                  {loading ? "Registrando..." : "Registrarse"}
+                </Text>
+              </TouchableOpacity>
 
-          {/* Botón */}
-          <TouchableOpacity
-            style={[styles.button, loading && { opacity: 0.6 }]}
-            onPress={handleSubmit(onSubmit)}
-            disabled={loading}
-          >
-            <Text style={[TEXT_STYLES.button, styles.buttonText]}>
-              {loading ? "Registrando..." : "Registrarse"}
-            </Text>
-          </TouchableOpacity>
+              {/* Términos */}
+              <View style={styles.termsContainer}>
+                <Text style={[TEXT_STYLES.body, styles.termsText]}>
+                  Al crear una cuenta, aceptas nuestros{" "}
+                  <Text style={[TEXT_STYLES.bodyBold, styles.linkText]}>
+                    Términos y Condiciones
+                  </Text>.
+                </Text>
+              </View>
 
-          {/* Términos */}
-          <View style={styles.termsContainer}>
-            <Text style={[TEXT_STYLES.body, styles.termsText]}>
-              Al crear una cuenta, aceptas nuestros{" "}
-              <Text style={[TEXT_STYLES.bodyBold, styles.linkText]}>Términos y Condiciones</Text>.
-            </Text>
+              {/* Error */}
+              {error && <Text style={[TEXT_STYLES.body, styles.errorText]}>{error}</Text>}
+
+              {/* Footer */}
+              <View style={styles.footer}>
+                <Text style={[TEXT_STYLES.body, styles.footerText]}>
+                  ¿Ya tienes una cuenta?{" "}
+                  <Link href="/(auth)/signin">
+                    <Text style={[TEXT_STYLES.bodyBold, styles.linkText]}>
+                      Iniciar sesión
+                    </Text>
+                  </Link>
+                </Text>
+              </View>
+            </View>
           </View>
-
-          {/* Error */}
-          {error && <Text style={[TEXT_STYLES.body, styles.errorText]}>{error}</Text>}
-
-          {/* Footer */}
-          <View style={styles.footer}>
-            <Text style={[TEXT_STYLES.body, styles.footerText]}>
-              ¿Ya tienes una cuenta?{" "}
-              <Link href="/(auth)/signin">
-                <Text style={[TEXT_STYLES.bodyBold, styles.linkText]}>Iniciar sesión</Text>
-              </Link>
-            </Text>
-          </View>
-        </View>
-      </View>
-    </SafeAreaView>
+        </ScrollView>
+      </KeyboardAvoidingView>
   );
 }
 

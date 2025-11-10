@@ -31,6 +31,12 @@ export default tseslint.config(
       pluginReact.configs.flat.recommended,
       pluginReact.configs.flat["jsx-runtime"],
     ],
+    settings: {
+      react: {
+        version: "detect",
+      },
+    },
+
   },
   ...tsRecommended,
 );

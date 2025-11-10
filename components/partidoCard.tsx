@@ -1,9 +1,15 @@
-import { memo } from 'react';
-import { StyleSheet, ViewStyle } from 'react-native';
-import { View, Text } from '@/components/Themed';
-import type { Partido } from '@/types/partido';
-import { useTheme } from '@/hooks/useTheme';
-import { TEXT_STYLES } from '@/constants/Text';
+import { memo } from "react";
+import { StyleSheet, ViewStyle } from "react-native";
+import { View, Text } from "@/components/Themed";
+import type { Tables } from "@/types/supabase";
+import { useTheme } from "@/hooks/useTheme";
+import { TEXT_STYLES } from "@/constants/Text";
+
+export interface Partido extends Tables<"partidos"> {
+  equipo1?: { id_equipo: string; nombre: string | null };
+  equipo2?: { id_equipo: string; nombre: string | null };
+  torneos?: { nombre: string | null; ubicacion: string | null };
+}
 
 type Props = {
   partido: Partido;
@@ -13,17 +19,17 @@ type Props = {
 function PartidoCardBase({ partido, style }: Props) {
   const { colors } = useTheme();
 
-  // Helpers para mostrar los nombres de equipos o “sin definir”
-  const equipo1Nombre = partido.equipo1?.nombre || 'Equipo 1';
-  const equipo2Nombre = partido.equipo2?.nombre || 'Equipo 2';
-  const torneoNombre = partido.torneos?.nombre || 'Torneo desconocido';
-  const ubicacion = partido.torneos?.ubicacion || 'Ubicación no definida';
+  // ✅ Safely access joined fields
 
-  // Formato de fecha legible
-  const fecha = new Date(partido.fecha).toLocaleDateString('es-AR', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
+  //TODO arreglar para que no busque todos los partidos todo el tiempo  /*console.log(partido.id_partido)*/
+  const equipo1Nombre = partido.equipo1?.nombre ?? "Equipo 1";
+  const equipo2Nombre = partido.equipo2?.nombre ?? "Equipo 2";
+  const ubicacion = partido.torneos?.ubicacion ?? "Ubicación no definida";
+
+  const fecha = new Date(partido.fecha).toLocaleDateString("es-AR", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
   });
 
   return (
@@ -37,29 +43,23 @@ function PartidoCardBase({ partido, style }: Props) {
         style,
       ]}
     >
-      {/* 🏆 Equipos */}
       <Text style={[TEXT_STYLES.title, styles.cardTitle, { color: colors.text }]}>
         {equipo1Nombre} vs {equipo2Nombre}
       </Text>
 
-      {/* 🕓 Fecha y hora */}
       <Text style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text }]}>
         {fecha} - {partido.hora}
       </Text>
 
-      {/* 📍 Ubicación */}
       <Text style={[TEXT_STYLES.caption, styles.cardSubtitle, { color: colors.text }]}>
         {ubicacion}
       </Text>
 
-      {/* 🏅 Torneo */}
       <Text
         style={[TEXT_STYLES.captionBold, styles.cardSubtitle, { color: colors.tint }]}
       >
-        {torneoNombre}
       </Text>
 
-      {/* 🔢 Resultado */}
       {partido.resultado && (
         <Text style={[TEXT_STYLES.detail, styles.cardResult, { color: colors.text }]}>
           Resultado: {partido.resultado}

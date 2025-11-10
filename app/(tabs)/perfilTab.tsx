@@ -1,76 +1,26 @@
-import { useEffect, useState } from "react";
-import { StyleSheet, Image, FlatList, ActivityIndicator, View as RNView } from "react-native";
+import { useEffect } from "react";
+import { StyleSheet, Image, FlatList, ActivityIndicator, View as RNView, TouchableOpacity } from "react-native";
 import { Text, View } from "@/components/Themed";
 import { useTheme } from "@/hooks/useTheme";
 import image from "@/assets/images/favicon.png";
 import { useAuth } from "@/providers/AuthProvider";
-import { supabase } from "@/lib/supabase";
 import { PartidoCard } from "@/components/partidoCard";
-import type { Partido } from "@/types/partido";
 import { TEXT_STYLES } from "@/constants/Text";
+import { usePartidos } from "@/providers/partidosProvider";
+import { router } from "expo-router";
 
 export default function PerfilTab() {
   const { colors } = useTheme();
   const { jugador } = useAuth();
-  const [partidosPasados, setPartidosPasados] = useState<Partido[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { partidos, loading, error, getPartidosPasadosByJugador } = usePartidos();
 
   useEffect(() => {
-    if (!jugador?.id_jugador) return;
-
-    const fetchPartidos = async () => {
-      setLoading(true);
-      try {
-        // 1️⃣ Buscar equipos del jugador
-        const { data: equipos, error: equiposError } = await supabase
-          .from("equipos")
-          .select("id_equipo")
-          .or(`id_jugador1.eq.${jugador.id_jugador},id_jugador2.eq.${jugador.id_jugador}`);
-
-        if (equiposError) throw equiposError;
-        if (!equipos?.length) {
-          setPartidosPasados([]);
-          setLoading(false);
-          return;
-        }
-
-        const equipoIds = equipos.map((e) => e.id_equipo);
-
-        // 2️⃣ Buscar partidos donde el jugador participó (equipos 1 o 2)
-        const { data, error } = await supabase
-          .from<Partido>("partidos")
-          .select(`
-            id_partido,
-            fecha,
-            hora,
-            fase,
-            resultado,
-            torneos (nombre, deporte, ubicacion),
-            equipo1:id_equipo1 (id_equipo, nombre),
-            equipo2:id_equipo2 (id_equipo, nombre)
-          `)
-          .or(equipoIds.map((id) => `id_equipo1.eq.${id},id_equipo2.eq.${id}`).join(","))
-          .order("fecha", { ascending: false });
-
-        if (error) throw error;
-
-        // 3️⃣ Filtrar partidos pasados
-        const hoy = new Date();
-        const pasados = (data ?? []).filter((partido) => new Date(partido.fecha) < hoy);
-        setPartidosPasados(pasados);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        console.error("Error cargando partidos pasados:", message);
-        setPartidosPasados([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPartidos();
+    if (jugador?.id_jugador) {
+      getPartidosPasadosByJugador(jugador.id_jugador);
+    }
   }, [jugador?.id_jugador]);
 
-  // 🔹 Encabezado con avatar + datos de jugador
+  // 🔹 Header with player info
   const Header = (
     <RNView>
       <View style={styles.headerRow}>
@@ -87,7 +37,9 @@ export default function PerfilTab() {
       </View>
 
       <View style={styles.stats}>
-        <Text style={[TEXT_STYLES.body, { color: colors.text }]}>Edad: {jugador?.edad ?? "—"}</Text>
+        <Text style={[TEXT_STYLES.body, { color: colors.text }]}>
+          Edad: {jugador?.edad ?? "—"}
+        </Text>
         <Text style={[TEXT_STYLES.body, { color: colors.text }]}>
           Ranking Tenis: {jugador?.ranking_tennis ?? 0}
         </Text>
@@ -108,13 +60,29 @@ export default function PerfilTab() {
       {Header}
       {loading ? (
         <ActivityIndicator size="large" color={colors.tint} style={{ marginTop: 20 }} />
+      ) : error ? (
+        <Text style={[TEXT_STYLES.body, { color: "red", textAlign: "center", marginTop: 20 }]}>
+          {error}
+        </Text>
       ) : (
         <FlatList
-          data={partidosPasados}
+          data={partidos}
           keyExtractor={(item) => item.id_partido}
-          renderItem={({ item }) => <PartidoCard partido={item} />}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => router.push(`/torneos/${item.id_torneo}`)}
+            >
+              <PartidoCard partido={item} />
+            </TouchableOpacity>
+          )}
           ListEmptyComponent={
-            <Text style={[TEXT_STYLES.body, { textAlign: "center", marginTop: 20, color: colors.text }]}>
+            <Text
+              style={[
+                TEXT_STYLES.body,
+                { textAlign: "center", marginTop: 20, color: colors.text },
+              ]}
+            >
               No hay partidos pasados
             </Text>
           }
