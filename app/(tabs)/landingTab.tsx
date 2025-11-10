@@ -7,35 +7,31 @@ import { NoticiaCard } from "@/components/noticiaCard";
 export default function LandingTab() {
   const { colors } = useTheme();
 
+  
   const exampleNews = [
     {
       icon: "football-outline",
-      title: "Virreyes RC vence a Alumni",
-      subtitle: "Un gran partido del Top 12 con remontada en el segundo tiempo.",
+      title: "Nuevo torneo",
+      subtitle: "Nuevo torneo hecho en algun momento de la semana",
       date: "10 Nov",
     },
     {
       icon: "leaf-outline",
       title: "Nuevas medidas ambientales",
-      subtitle: "El gobierno anunció un nuevo plan de forestación urbana.",
+      subtitle: "Estamos haciendo cosas para ser ecofriendly o algo asi",
       date: "Hoy",
     },
     {
-      icon: "cash-outline",
-      title: "El dólar cierra en alza",
+      icon: "person",
+      title: "Ganadora del ultimo torneo",
       subtitle:
-        "La divisa sube por tercera jornada consecutiva en el mercado oficial.",
+        "Felicidades.......",
       date: "Ayer",
     },
   ];
-
+  
   return (
     <View style={styles.container}>
-      <Text
-        style={[TEXT_STYLES.headingSm, styles.title, { color: colors.text }]}
-      >
-        Noticias
-      </Text>
 
       <View style={[styles.separator, { backgroundColor: colors.border }]} />
 
@@ -63,7 +59,6 @@ export default function LandingTab() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "flex-start",
     paddingTop: 20,
   },
@@ -73,6 +68,6 @@ const styles = StyleSheet.create({
   separator: {
     marginVertical: 20,
     height: 1,
-    width: "80%",
+    width: "10%",
   },
 });

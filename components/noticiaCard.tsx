@@ -1,14 +1,18 @@
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/hooks/useTheme";
+import { ComponentProps } from "react";
+
+
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
 export function NoticiaCard({
-    icon = "newspaper-outline",
+    icon,
     title,
     subtitle,
     date,
 }: {
-    icon?: string;
+    icon?:  string ;
     title: string;
     subtitle?: string;
     date: string;
@@ -29,7 +33,7 @@ export function NoticiaCard({
                     { backgroundColor: colors.text + "11", borderColor: colors.text + "33" },
                 ]}
             >
-                <Ionicons name={icon as any} size={40} color={colors.text} />
+                <Ionicons  name={(icon as IoniconName) || "alarm"} size={40} color={colors.text} />
             </View>
 
             {/* Right content */}
@@ -54,48 +58,6 @@ export function NoticiaCard({
     );
 }
 
-// --- Example usage preview ---
-export default function NoticiaCardExample() {
-    const exampleNews = [
-        {
-            icon: "football-outline",
-            title: "Virreyes RC vence a Alumni",
-            subtitle: "Un gran partido del Top 12 con remontada en el segundo tiempo.",
-            date: "10 Nov",
-        },
-        {
-            icon: "leaf-outline",
-            title: "Nuevas medidas ambientales",
-            subtitle: "El gobierno anunció un nuevo plan de forestación urbana.",
-            date: "Hoy",
-        },
-        {
-            icon: "cash-outline",
-            title: "El dólar cierra en alza",
-            subtitle: "La divisa sube por tercera jornada consecutiva en el mercado oficial.",
-            date: "Ayer",
-        },
-    ];
-
-    return (
-        <ScrollView
-            contentContainerStyle={{
-                padding: 16,
-                gap: 10,
-            }}
-        >
-            {exampleNews.map((n, i) => (
-                <NoticiaCard
-                    key={i}
-                    icon={n.icon}
-                    title={n.title}
-                    subtitle={n.subtitle}
-                    date={n.date}
-                />
-            ))}
-        </ScrollView>
-    );
-}
 
 // --- Styles ---
 const styles = StyleSheet.create({
