@@ -1,10 +1,8 @@
-import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { View, Text, TextInput, Button } from 'react-native';
 import { supabase } from '@/lib/supabase';
 
 export default function ResetPassword() {
-    const { token } = useLocalSearchParams();
     const [password, setPassword] = useState('');
 
     const handleReset = async () => {

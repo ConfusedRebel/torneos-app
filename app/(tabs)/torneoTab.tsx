@@ -93,12 +93,12 @@ export default function TorneosTab() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* 🔍 Search Bar */}
-      <RNView style={[styles.filterBar, {bottom : 5}]}>
+      <RNView style={[styles.filterBar, { marginBottom: 5 }]}> 
         <TextInput
           value={query}
           onChangeText={setQuery}
           placeholder="Buscar torneo por nombre…"
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.mutedText}
           style={[
             styles.input,
             {
@@ -114,7 +114,7 @@ export default function TorneosTab() {
           onPress={() => setQuery("")}
           style={[styles.clearBtn, { borderColor: colors.border }]}
         >
-          <Text style={{ color: colors.text }}>✕</Text>
+          <Text style={[TEXT_STYLES.captionBold, { color: colors.text }]}>✕</Text>
         </TouchableOpacity>
       </RNView>
 
@@ -128,7 +128,7 @@ export default function TorneosTab() {
               { borderColor: colors.border, backgroundColor: colors.card },
             ]}
           >
-            <Text style={[styles.filterLabel, { color: colors.text }]}>
+            <Text style={[TEXT_STYLES.caption, styles.filterLabel, { color: colors.text }]}>
               {estado === "pendiente"
                 ? "Pendiente"
                 : estado === "en_curso"
@@ -157,7 +157,9 @@ export default function TorneosTab() {
               { borderColor: colors.border, backgroundColor: colors.card },
             ]}
           >
-            <Text style={[styles.filterLabel, { color: colors.text }]}>{modalidad == "all"? "Todos" : capitalize(modalidad)}</Text>
+            <Text style={[TEXT_STYLES.caption, styles.filterLabel, { color: colors.text }]}>
+              {modalidad == "all"? "Todos" : capitalize(modalidad)}
+            </Text>
             <Picker
               selectedValue={modalidad}
               onValueChange={(v: ModalidadFilter) => setModalidad(v)}
@@ -177,7 +179,9 @@ export default function TorneosTab() {
               { borderColor: colors.border, backgroundColor: colors.card },
             ]}
           >
-            <Text style={[styles.filterLabel, { color: colors.text }]}>{deporte == "all"? "Todos" : capitalize(deporte)}</Text>
+            <Text style={[TEXT_STYLES.caption, styles.filterLabel, { color: colors.text }]}>
+              {deporte == "all"? "Todos" : capitalize(deporte)}
+            </Text>
             <Picker
               selectedValue={deporte}
               onValueChange={(v: DeporteFilter) => setDeporte(v)}
@@ -185,8 +189,8 @@ export default function TorneosTab() {
               style={{ color: colors.text, flex: 1 }}
             >
               <Picker.Item label="Todos" value="all" />
-              <Picker.Item label="Paddle" value="paddle" />
-              <Picker.Item label="Tennis" value="tennis" />
+              <Picker.Item label="Padle" value="paddle" />
+              <Picker.Item label="Tenis" value="tennis" />
             </Picker>
           </RNView>
         </RNView>
@@ -200,14 +204,18 @@ export default function TorneosTab() {
           data={torneos}
           keyExtractor={(item) => String(item.id_torneo)}
           renderItem={({ item }) => (
-            <TorneoCard torneo={item} onPress={() => openTorneo(item.id_torneo)} />
+            <TorneoCard
+              torneo={item}
+              isClub={Boolean(item.club)}
+              onPress={() => openTorneo(item.id_torneo)}
+            />
           )}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <Text
               style={[
                 TEXT_STYLES.body,
-                { color: colors.text, textAlign: "center", marginTop: 24 },
+                { color: colors.mutedText, textAlign: "center", marginTop: 24 },
               ]}
             >
               No hay torneos por ahora
@@ -225,7 +233,7 @@ export default function TorneosTab() {
             { backgroundColor: colors.tint, borderColor: colors.border },
           ]}
         >
-          <Ionicons name="add" size={28} color="#fff" />
+          <Ionicons name="add" size={28} color={colors.onTint} />
         </TouchableOpacity>
       )}
     </View>
@@ -265,7 +273,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     height: 48,
   },
-  filterLabel: { fontSize: 14, marginRight: 8 },
+  filterLabel: { marginRight: 8 },
   fab: {
     position: "absolute",
     bottom: 20,
