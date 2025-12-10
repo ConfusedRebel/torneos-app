@@ -131,8 +131,8 @@ export default function JugadorTab() {
           dropdownIconColor={colors.text}
           style={{ color: colors.text }}
         >
-          <Picker.Item label="Tennis" value="tennis" />
-          <Picker.Item label="Paddle" value="paddle" />
+          <Picker.Item label="Tenis" value="tennis" />
+          <Picker.Item label="Padle" value="paddle" />
         </Picker>
       </RNView>
 

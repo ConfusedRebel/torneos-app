@@ -17,8 +17,8 @@ interface EquiposContextType {
   refreshEquipos: () => Promise<void>;
   createEquipo: (
     payload: Pick<EquipoInsert, "id_torneo" | "id_jugador1" | "id_jugador2">
-  ) => Promise<{ error: any | null }>;
-  deleteEquipo: (id_equipo: string) => Promise<{ error: any | null }>;
+  ) => Promise<{ error: string | null }>;
+  deleteEquipo: (id_equipo: string) => Promise<{ error: string | null }>;
 }
 
 const EquiposContext = createContext<EquiposContextType | undefined>(undefined);
@@ -51,9 +51,10 @@ export const EquiposProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
 
       setEquipos((data ?? []) as Equipo[]);
-    } catch (err: any) {
-      console.error("Error loading equipos:", err);
-      setError(err?.message ?? "Error desconocido");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Error loading equipos:", message);
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -84,12 +85,13 @@ export const EquiposProvider = ({ children }: { children: ReactNode }) => {
         }
       );
 
-      const data = await res.json();
+      const data: { error?: string } = await res.json();
 
       if (!res.ok) {
-        console.error("Edge Function error:", data.error);
-        setError(data.error);
-        return { error: data.error };
+        const message = data.error ?? "Error desconocido";
+        console.error("Edge Function error:", message);
+        setError(message);
+        return { error: message };
       }
 
       // agregar al estado si corresponde
@@ -98,10 +100,11 @@ export const EquiposProvider = ({ children }: { children: ReactNode }) => {
       }
 
       return { error: null };
-    } catch (err: any) {
-      console.error("Error calling Edge Function:", err);
-      setError(err?.message ?? "Error desconocido");
-      return { error: err };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Error calling Edge Function:", message);
+      setError(message);
+      return { error: message };
     } finally {
       setLoading(false);
     }
@@ -125,10 +128,11 @@ export const EquiposProvider = ({ children }: { children: ReactNode }) => {
       setEquipos((prev) => prev.filter((e) => e.id_equipo !== id_equipo));
 
       return { error: null };
-    } catch (err: any) {
-      console.error("Error deleting equipo:", err);
-      setError(err?.message ?? "Error desconocido");
-      return { error: err };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Error deleting equipo:", message);
+      setError(message);
+      return { error: message };
     } finally {
       setLoading(false);
     }

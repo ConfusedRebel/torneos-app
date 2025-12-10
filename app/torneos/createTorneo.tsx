@@ -17,13 +17,18 @@ import { router } from "expo-router";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import type { TablesInsert } from "@/types/supabase";
+import { TEXT_STYLES } from "@/constants/Text";
+import Colors from "@/constants/Colors";
+
+type ThemeColors = (typeof Colors)[keyof typeof Colors];
+type DeporteValue = "paddle" | "tennis" | "";
 
 export default function CreateTorneo() {
     const { colors } = useTheme();
     const { create } = useTorneos();
 
     const [nombre, setNombre] = useState("");
-    const [deporte, setDeporte] = useState<"paddle" | "tennis" | "">("");
+    const [deporte, setDeporte] = useState<DeporteValue>("");
     const [ubicacion, setUbicacion] = useState("");
 
     const [club, setClub] = useState(false);
@@ -80,12 +85,12 @@ export default function CreateTorneo() {
                 { backgroundColor: colors.background },
             ]}
         >
-            <Text style={[styles.title, { color: colors.text }]}>Crear Torneo</Text>
+            <Text style={[TEXT_STYLES.headingMd, styles.title, { color: colors.text }]}>Crear Torneo</Text>
 
             <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.text }]}
                 placeholder="Nombre del torneo"
-                placeholderTextColor="#888"
+                placeholderTextColor={colors.mutedText}
                 value={nombre}
                 onChangeText={setNombre}
             />
@@ -93,17 +98,17 @@ export default function CreateTorneo() {
             <RNPicker
                 label="Deporte"
                 selectedValue={deporte}
-                onValueChange={(v) => setDeporte(v as "paddle" | "tennis")}
+                onValueChange={(v) => setDeporte(v as DeporteValue)}
                 colors={colors}
             />
 
             {/* SWITCH CLUB */}
             <View style={styles.switchRow}>
-                <Text style={{ color: colors.text, fontSize: 16 }}>Torneo de Club</Text>
+                <Text style={[TEXT_STYLES.body, { color: colors.text }]}>Torneo de Club</Text>
                 <Switch
                     value={club}
                     onValueChange={setClub}
-                    thumbColor={club ? colors.tint : "#ccc"}
+                    thumbColor={club ? colors.tint : colors.border}
                 />
             </View>
 
@@ -111,7 +116,7 @@ export default function CreateTorneo() {
                 style={[styles.input, { borderColor: colors.border, color: colors.text }]}
                 keyboardType="numeric"
                 placeholder="Cantidad de Participantes"
-                placeholderTextColor="#888"
+                placeholderTextColor={colors.mutedText}
                 onChangeText={(txt) => {
                     const clean = txt.replace(/[^0-9]/g, "");
                     setMaxParticipantes(clean ? parseInt(clean) : null);
@@ -121,7 +126,7 @@ export default function CreateTorneo() {
             <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.text }]}
                 placeholder="Ubicación"
-                placeholderTextColor="#888"
+                placeholderTextColor={colors.mutedText}
                 value={ubicacion}
                 onChangeText={setUbicacion}
             />
@@ -131,7 +136,7 @@ export default function CreateTorneo() {
                 style={[styles.input, { borderColor: colors.border }]}
                 onPress={() => setShowInicioPicker(true)}
             >
-                <Text style={{ color: fechaInicio ? colors.text : "#888" }}>
+                <Text style={[TEXT_STYLES.body, { color: fechaInicio ? colors.text : colors.mutedText }]}>
                     {fechaInicio
                         ? `Inicio: ${fechaInicio.toISOString().split("T")[0]}`
                         : "Seleccionar fecha de inicio"}
@@ -140,7 +145,7 @@ export default function CreateTorneo() {
 
             {showInicioPicker && (
                 Platform.OS === "ios" ? (
-                    <View style={styles.iosPickerContainer}>
+                    <View style={[styles.iosPickerContainer, { backgroundColor: colors.card }]}>
                         <DateTimePicker
                             value={fechaInicio || new Date()}
                             mode="date"
@@ -148,16 +153,16 @@ export default function CreateTorneo() {
                             onChange={(_, d) => d && setFechaInicio(d)}
                         />
                         <TouchableOpacity
-                            style={styles.doneButton}
+                            style={[styles.doneButton, { backgroundColor: colors.tint }]}
                             onPress={() => setShowInicioPicker(false)}
                         >
-                            <Text style={styles.doneButtonText}>Listo</Text>
+                            <Text style={[TEXT_STYLES.button, styles.doneButtonText, { color: colors.onTint }]}>Listo</Text>
                         </TouchableOpacity>
                     </View>
                 ) : (
                     <Modal transparent visible>
                         <View style={styles.modalOverlay}>
-                            <View style={styles.modalContent}>
+                            <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
                                 <DateTimePicker
                                     value={fechaInicio || new Date()}
                                     mode="date"
@@ -177,7 +182,7 @@ export default function CreateTorneo() {
                 style={[styles.input, { borderColor: colors.border }]}
                 onPress={() => setShowFinPicker(true)}
             >
-                <Text style={{ color: fechaFin ? colors.text : "#888" }}>
+                <Text style={[TEXT_STYLES.body, { color: fechaFin ? colors.text : colors.mutedText }]}>
                     {fechaFin
                         ? `Fin: ${fechaFin.toISOString().split("T")[0]}`
                         : "Seleccionar fecha de fin (opcional)"}
@@ -186,7 +191,7 @@ export default function CreateTorneo() {
 
             {showFinPicker && (
                 Platform.OS === "ios" ? (
-                    <View style={styles.iosPickerContainer}>
+                    <View style={[styles.iosPickerContainer, { backgroundColor: colors.card }]}>
                         <DateTimePicker
                             value={fechaFin || fechaInicio || new Date()}
                             mode="date"
@@ -194,16 +199,16 @@ export default function CreateTorneo() {
                             onChange={(_, d) => d && setFechaFin(d)}
                         />
                         <TouchableOpacity
-                            style={styles.doneButton}
+                            style={[styles.doneButton, { backgroundColor: colors.tint }]}
                             onPress={() => setShowFinPicker(false)}
                         >
-                            <Text style={styles.doneButtonText}>Listo</Text>
+                            <Text style={[TEXT_STYLES.button, styles.doneButtonText, { color: colors.onTint }]}>Listo</Text>
                         </TouchableOpacity>
                     </View>
                 ) : (
                     <Modal transparent visible>
                         <View style={styles.modalOverlay}>
-                            <View style={styles.modalContent}>
+                            <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
                                 <DateTimePicker
                                     value={fechaFin || fechaInicio || new Date()}
                                     mode="date"
@@ -234,7 +239,7 @@ export default function CreateTorneo() {
                 style={[styles.btn, { backgroundColor: colors.tint }]}
                 onPress={handleCreate}
             >
-                <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                <Text style={[TEXT_STYLES.button, { color: colors.onTint }]}>
                     {isLoading ? "Creando..." : "Crear Torneo"}
                 </Text>
             </TouchableOpacity>
@@ -248,7 +253,7 @@ interface RNPickerProps {
     label: string;
     selectedValue: string;
     onValueChange: (v: string) => void;
-    colors: any;
+    colors: ThemeColors;
     options?: { label: string; value: string }[];
 }
 
@@ -258,8 +263,8 @@ function RNPicker({
     onValueChange,
     colors,
     options = [
-        { label: "Paddle", value: "paddle" },
-        { label: "Tennis", value: "tennis" },
+        { label: "Padle", value: "paddle" },
+        { label: "Tenis", value: "tennis" },
     ],
 }: RNPickerProps) {
     return (
@@ -269,7 +274,7 @@ function RNPicker({
                 { borderColor: colors.border, backgroundColor: colors.card },
             ]}
         >
-            <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+            <Text style={[TEXT_STYLES.caption, { color: colors.text, marginRight: 8 }]}>{label}</Text>
 
             <Picker
                 selectedValue={selectedValue}
@@ -290,7 +295,7 @@ function RNPicker({
 
 const styles = StyleSheet.create({
     container: { flexGrow: 1, padding: 20, gap: 16 },
-    title: { fontSize: 22, fontWeight: "600", marginBottom: 10 },
+    title: { marginBottom: 10 },
     input: { borderWidth: 1, borderRadius: 8, padding: 12, fontSize: 16 },
     btn: { padding: 14, borderRadius: 10, alignItems: "center", marginTop: 20 },
 
@@ -303,8 +308,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
 
-    label: { fontSize: 14, marginRight: 8 },
-
     switchRow: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -312,35 +315,21 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
     },
 
-    iosPickerContainer: {
-        marginVertical: 8,
-        backgroundColor: "#fff",
-        borderRadius: 8,
-        padding: 10,
-    },
+    iosPickerContainer: { marginVertical: 8, borderRadius: 8, padding: 10 },
 
     doneButton: {
         alignSelf: "flex-end",
-        backgroundColor: "#000",
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 8,
         marginTop: 8,
     },
-    doneButtonText: {
-        color: "#fff",
-        fontWeight: "bold",
-    },
+    doneButtonText: { fontWeight: "bold" },
 
     modalOverlay: {
         flex: 1,
         justifyContent: "center",
         backgroundColor: "rgba(0,0,0,0.5)",
     },
-    modalContent: {
-        backgroundColor: "#fff",
-        margin: 20,
-        borderRadius: 12,
-        padding: 16,
-    },
+    modalContent: { margin: 20, borderRadius: 12, padding: 16 },
 });
