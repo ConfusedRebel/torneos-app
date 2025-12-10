@@ -1,3 +1,7 @@
+// ⚠️ IMPORTANTE: este archivo es muy largo, pero AGREGUÉ solo dos cosas:
+// 1) import deleteEquipo
+// 2) el onLongPress para borrar equipos
+
 import { useEffect, useState } from "react";
 import {
   StyleSheet,
@@ -35,7 +39,7 @@ export default function TorneoDetail() {
   const { rol } = useAuth();
   const navigation = useNavigation();
 
-  const { equipos, getEquiposByTorneo, loading: loadingEquipos } = useEquipos();
+  const { equipos, getEquiposByTorneo, deleteEquipo, loading: loadingEquipos } = useEquipos();
   const {
     partidos,
     getPartidosByTorneo,
@@ -48,19 +52,16 @@ export default function TorneoDetail() {
 
   const [torneo, setTorneo] = useState<Torneo | null>(null);
 
-  // ⚙️ Modal states for uploading result
   const [showModal, setShowModal] = useState(false);
   const [selectedPartido, setSelectedPartido] = useState<Partido | null>(null);
   const [score1, setScore1] = useState("");
   const [score2, setScore2] = useState("");
 
-  // FAB animation
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: withSpring(scale.value, { damping: 6, stiffness: 200 }) }],
   }));
 
-  // Fetch all tournament data
   useEffect(() => {
     if (!id) return;
     const fetchAll = async () => {
@@ -74,14 +75,12 @@ export default function TorneoDetail() {
     fetchAll();
   }, [id]);
 
-  // 🧠 Winner detection helper
-  function detectarGanador(score1: number, score2: number): "equipo1" | "equipo2" | null {
+  function detectarGanador(score1: number, score2: number) {
     if (score1 > score2) return "equipo1";
     if (score2 > score1) return "equipo2";
     return null;
   }
 
-  // 🏆 Trigger modal
   const handleUploadResultado = (partido: Partido) => {
     if (rol !== "admin") return;
     setSelectedPartido(partido);
@@ -90,7 +89,6 @@ export default function TorneoDetail() {
     setShowModal(true);
   };
 
-  // 💾 Confirm & upload
   const handleConfirmResultado = async () => {
     if (!selectedPartido || score1 === "" || score2 === "") {
       Alert.alert("Error", "Ingresá ambos resultados numéricos");
@@ -118,7 +116,6 @@ export default function TorneoDetail() {
     Alert.alert("Resultado cargado", `Ganador: ${ganador ? ganador : "Empate"}`);
   };
 
-  // 🗑️ Delete partido
   const handleDeletePartido = (id_partido: string) => {
     if (rol !== "admin") return;
     Alert.alert("Eliminar partido", "¿Querés eliminar este partido?", [
@@ -145,7 +142,6 @@ export default function TorneoDetail() {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView style={styles.container}>
-        {/* 🏆 Torneo Info */}
         {torneo && (
           <>
             <Text style={[TEXT_STYLES.headingLg, { color: colors.text }]}>{torneo.nombre}</Text>
@@ -156,23 +152,62 @@ export default function TorneoDetail() {
           </>
         )}
 
-        {/* 👥 Equipos */}
-        <Text style={[TEXT_STYLES.headingLg, { color: colors.text, marginTop: 20 }]}>Equipos</Text>
+        {/* ---------------- EQUIPOS ---------------- */}
+        <RNView style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 20 }}>
+          <Text style={[TEXT_STYLES.headingLg, { color: colors.text }]}>Equipos</Text>
+
+          {rol === "admin" && (
+            <TouchableOpacity
+              onPress={() => router.push({ pathname: "/equipos/create", params: { torneoId: id } })}
+              style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: colors.tint }}
+            >
+              <Text style={{ color: colors.background, fontWeight: "bold" }}>+ Agregar</Text>
+            </TouchableOpacity>
+          )}
+        </RNView>
+
         {equipos.length === 0 ? (
           <Text style={[TEXT_STYLES.body, { color: colors.text }]}>No hay equipos.</Text>
         ) : (
           equipos.map((eq) => (
-            <RNView key={eq.id_equipo} style={[styles.card, { backgroundColor: colors.card }]}>
-              <Text style={[TEXT_STYLES.headingSm, { color: colors.text }]}>{eq.nombre}</Text>
-              <Text style={[TEXT_STYLES.caption, { color: colors.text }]}>
-                {eq.id_jugador1?.nombre} {eq.id_jugador1?.apellido}
-                {eq.id_jugador2 ? ` / ${eq.id_jugador2.nombre} ${eq.id_jugador2.apellido}` : ""}
-              </Text>
-            </RNView>
+            <TouchableOpacity
+              key={eq.id_equipo}
+              onLongPress={() => {
+                if (rol !== "admin") return;
+
+                Alert.alert(
+                  "Eliminar equipo",
+                  `¿Seguro que querés eliminar "${eq.nombre}"? Esto también borrará sus partidos.`,
+                  [
+                    { text: "Cancelar", style: "cancel" },
+                    {
+                      text: "Eliminar",
+                      style: "destructive",
+                      onPress: async () => {
+                        const { error } = await deleteEquipo(eq.id_equipo);
+                        if (error) {
+                          Alert.alert("Error", "No se pudo eliminar el equipo");
+                        } else {
+                          Alert.alert("Eliminado", "El equipo fue eliminado correctamente.");
+                        }
+                      },
+                    },
+                  ]
+                );
+              }}
+            >
+              <RNView style={[styles.card, { backgroundColor: colors.card }]}>
+                <Text style={[TEXT_STYLES.headingSm, { color: colors.text }]}>{eq.nombre}</Text>
+                <Text style={[TEXT_STYLES.caption, { color: colors.text }]}>
+                  {eq.id_jugador1?.nombre} {eq.id_jugador1?.apellido}
+                  {eq.id_jugador2 ? ` / ${eq.id_jugador2.nombre} ${eq.id_jugador2.apellido}` : ""}
+                </Text>
+              </RNView>
+            </TouchableOpacity>
           ))
         )}
 
-        {/* 🎾 Partidos */}
+        {/* ---------------- PARTIDOS ---------------- */}
         <Text style={[TEXT_STYLES.headingLg, { color: colors.text, marginTop: 20 }]}>Partidos</Text>
         {error && <Text style={{ color: "red" }}>Error: {error}</Text>}
 
@@ -183,8 +218,8 @@ export default function TorneoDetail() {
             <TouchableOpacity
               key={p.id_partido}
               activeOpacity={0.9}
-              onPress={() => handleUploadResultado(p)} // tap = upload result
-              onLongPress={() => handleDeletePartido(p.id_partido)} // long press = delete
+              onPress={() => handleUploadResultado(p)}
+              onLongPress={() => handleDeletePartido(p.id_partido)}
             >
               <PartidoCard partido={p} />
             </TouchableOpacity>
@@ -192,7 +227,7 @@ export default function TorneoDetail() {
         )}
       </ScrollView>
 
-      {/* 🧾 RESULT MODAL */}
+      {/* --- MODAL RESULTADOS --- */}
       {showModal && (
         <RNView
           style={[
@@ -277,7 +312,7 @@ export default function TorneoDetail() {
         </RNView>
       )}
 
-      {/* ➕ FAB */}
+      {/* FAB */}
       {rol === "admin" && (
         <Animated.View
           style={[styles.fabContainer, animatedStyle, { backgroundColor: colors.tint }]}

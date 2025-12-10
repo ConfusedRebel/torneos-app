@@ -16,21 +16,18 @@ export type Database = {
     Tables: {
       administradores: {
         Row: {
-          contraseña: string
           email: string
           id_administrador: string
           nombre: string
           user_id: string | null
         }
         Insert: {
-          contraseña: string
           email: string
           id_administrador?: string
           nombre: string
           user_id?: string | null
         }
         Update: {
-          contraseña?: string
           email?: string
           id_administrador?: string
           nombre?: string
@@ -187,6 +184,7 @@ export type Database = {
       }
       torneos: {
         Row: {
+          club: boolean
           deporte: string
           duo: boolean
           estado: Database["public"]["Enums"]["estado_torneo"]
@@ -198,6 +196,7 @@ export type Database = {
           ubicacion: string
         }
         Insert: {
+          club?: boolean
           deporte: string
           duo?: boolean
           estado?: Database["public"]["Enums"]["estado_torneo"]
@@ -209,6 +208,7 @@ export type Database = {
           ubicacion: string
         }
         Update: {
+          club?: boolean
           deporte?: string
           duo?: boolean
           estado?: Database["public"]["Enums"]["estado_torneo"]
@@ -226,7 +226,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       estado_torneo: "pendiente" | "en_curso" | "finalizado"

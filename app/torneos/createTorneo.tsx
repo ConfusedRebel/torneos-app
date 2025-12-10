@@ -8,6 +8,7 @@ import {
     ScrollView,
     Platform,
     Modal,
+    Switch,
 } from "react-native";
 import { useState } from "react";
 import { useTheme } from "@/hooks/useTheme";
@@ -15,6 +16,7 @@ import { useTorneos } from "@/providers/torneosProvider";
 import { router } from "expo-router";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import type { TablesInsert } from "@/types/supabase";
 
 export default function CreateTorneo() {
     const { colors } = useTheme();
@@ -23,10 +25,11 @@ export default function CreateTorneo() {
     const [nombre, setNombre] = useState("");
     const [deporte, setDeporte] = useState<"paddle" | "tennis" | "">("");
     const [ubicacion, setUbicacion] = useState("");
-    const [duo, setDuo] = useState(false);
-    const [maxParticipantes, setmaxParticipantes] = useState(0);
 
-    // 🗓️ Estados de fecha
+    const [club, setClub] = useState(false);
+    const [duo, setDuo] = useState(false);
+    const [maxParticipantes, setMaxParticipantes] = useState<number | null>(null);
+
     const [fechaInicio, setFechaInicio] = useState<Date | null>(null);
     const [fechaFin, setFechaFin] = useState<Date | null>(null);
     const [showInicioPicker, setShowInicioPicker] = useState(false);
@@ -34,10 +37,10 @@ export default function CreateTorneo() {
 
     const [isLoading, setIsLoading] = useState(false);
 
-    // ✅ Crear torneo
+    // ⭐ CREAR TORNEO
     const handleCreate = async () => {
         if (!nombre || !deporte || !fechaInicio || !maxParticipantes) {
-            Alert.alert("Campos incompletos", "Por favor completa los datos requeridos");
+            Alert.alert("Campos incompletos", "Completá los datos requeridos.");
             return;
         }
 
@@ -46,17 +49,20 @@ export default function CreateTorneo() {
             ? fechaFin.toISOString().split("T")[0]
             : fecha_inicio_sql;
 
-        setIsLoading(true);
-        const ok = await create({
+        const payload: TablesInsert<"torneos"> = {
             nombre,
             deporte,
             ubicacion,
             duo,
+            club,
             fecha_inicio: fecha_inicio_sql,
             fecha_fin: fecha_fin_sql,
             estado: "pendiente",
-            maxParticipantes: 16,
-        });
+            maxParticipantes,
+        };
+
+        setIsLoading(true);
+        const ok = await create(payload);
         setIsLoading(false);
 
         if (ok) {
@@ -76,7 +82,6 @@ export default function CreateTorneo() {
         >
             <Text style={[styles.title, { color: colors.text }]}>Crear Torneo</Text>
 
-            {/* Nombre */}
             <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.text }]}
                 placeholder="Nombre del torneo"
@@ -85,7 +90,6 @@ export default function CreateTorneo() {
                 onChangeText={setNombre}
             />
 
-            {/* Deporte */}
             <RNPicker
                 label="Deporte"
                 selectedValue={deporte}
@@ -93,19 +97,27 @@ export default function CreateTorneo() {
                 colors={colors}
             />
 
+            {/* SWITCH CLUB */}
+            <View style={styles.switchRow}>
+                <Text style={{ color: colors.text, fontSize: 16 }}>Torneo de Club</Text>
+                <Switch
+                    value={club}
+                    onValueChange={setClub}
+                    thumbColor={club ? colors.tint : "#ccc"}
+                />
+            </View>
+
             <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-                keyboardType="numeric" // shows numeric keypad
-                onChangeText={(text) => {
-                    // only allow digits
-                    const numericValue = text.replace(/[^0-9]/g, "");
-                    setmaxParticipantes(numericValue ? parseInt(numericValue, 10) : 0);
-                }}
-                placeholder="Cantidad de Jugadores "
+                keyboardType="numeric"
+                placeholder="Cantidad de Participantes"
                 placeholderTextColor="#888"
+                onChangeText={(txt) => {
+                    const clean = txt.replace(/[^0-9]/g, "");
+                    setMaxParticipantes(clean ? parseInt(clean) : null);
+                }}
             />
 
-            {/* Ubicación */}
             <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.text }]}
                 placeholder="Ubicación"
@@ -114,7 +126,7 @@ export default function CreateTorneo() {
                 onChangeText={setUbicacion}
             />
 
-            {/* Fecha de inicio */}
+            {/* FECHA INICIO */}
             <TouchableOpacity
                 style={[styles.input, { borderColor: colors.border }]}
                 onPress={() => setShowInicioPicker(true)}
@@ -133,9 +145,7 @@ export default function CreateTorneo() {
                             value={fechaInicio || new Date()}
                             mode="date"
                             display="inline"
-                            onChange={(_, selectedDate) => {
-                                if (selectedDate) setFechaInicio(selectedDate);
-                            }}
+                            onChange={(_, d) => d && setFechaInicio(d)}
                         />
                         <TouchableOpacity
                             style={styles.doneButton}
@@ -145,17 +155,14 @@ export default function CreateTorneo() {
                         </TouchableOpacity>
                     </View>
                 ) : (
-                    <Modal transparent={true} visible={showInicioPicker}>
+                    <Modal transparent visible>
                         <View style={styles.modalOverlay}>
                             <View style={styles.modalContent}>
                                 <DateTimePicker
                                     value={fechaInicio || new Date()}
                                     mode="date"
-                                    display="default"
-                                    onChange={(event, selectedDate) => {
-                                        if (event.type === "set" && selectedDate) {
-                                            setFechaInicio(selectedDate);
-                                        }
+                                    onChange={(e, d) => {
+                                        if (e.type === "set" && d) setFechaInicio(d);
                                         setShowInicioPicker(false);
                                     }}
                                 />
@@ -165,7 +172,7 @@ export default function CreateTorneo() {
                 )
             )}
 
-            {/* Fecha de fin */}
+            {/* FECHA FIN */}
             <TouchableOpacity
                 style={[styles.input, { borderColor: colors.border }]}
                 onPress={() => setShowFinPicker(true)}
@@ -184,9 +191,7 @@ export default function CreateTorneo() {
                             value={fechaFin || fechaInicio || new Date()}
                             mode="date"
                             display="inline"
-                            onChange={(_, selectedDate) => {
-                                if (selectedDate) setFechaFin(selectedDate);
-                            }}
+                            onChange={(_, d) => d && setFechaFin(d)}
                         />
                         <TouchableOpacity
                             style={styles.doneButton}
@@ -196,17 +201,14 @@ export default function CreateTorneo() {
                         </TouchableOpacity>
                     </View>
                 ) : (
-                    <Modal transparent={true} visible={showFinPicker}>
+                    <Modal transparent visible>
                         <View style={styles.modalOverlay}>
                             <View style={styles.modalContent}>
                                 <DateTimePicker
                                     value={fechaFin || fechaInicio || new Date()}
                                     mode="date"
-                                    display="default"
-                                    onChange={(event, selectedDate) => {
-                                        if (event.type === "set" && selectedDate) {
-                                            setFechaFin(selectedDate);
-                                        }
+                                    onChange={(e, d) => {
+                                        if (e.type === "set" && d) setFechaFin(d);
                                         setShowFinPicker(false);
                                     }}
                                 />
@@ -216,7 +218,6 @@ export default function CreateTorneo() {
                 )
             )}
 
-            {/* Modalidad */}
             <RNPicker
                 label="Modalidad"
                 selectedValue={duo ? "doble" : "single"}
@@ -241,7 +242,16 @@ export default function CreateTorneo() {
     );
 }
 
-/* 🔧 Picker reutilizable */
+/* ───────────── RNPicker Component ───────────── */
+
+interface RNPickerProps {
+    label: string;
+    selectedValue: string;
+    onValueChange: (v: string) => void;
+    colors: any;
+    options?: { label: string; value: string }[];
+}
+
 function RNPicker({
     label,
     selectedValue,
@@ -251,13 +261,7 @@ function RNPicker({
         { label: "Paddle", value: "paddle" },
         { label: "Tennis", value: "tennis" },
     ],
-}: {
-    label: string;
-    selectedValue: string;
-    onValueChange: (v: string) => void;
-    colors: ReturnType<typeof useTheme>["colors"];
-    options?: { label: string; value: string }[];
-}) {
+}: RNPickerProps) {
     return (
         <View
             style={[
@@ -266,6 +270,7 @@ function RNPicker({
             ]}
         >
             <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+
             <Picker
                 selectedValue={selectedValue}
                 onValueChange={onValueChange}
@@ -281,21 +286,14 @@ function RNPicker({
     );
 }
 
+/* ───────────── Styles ───────────── */
+
 const styles = StyleSheet.create({
     container: { flexGrow: 1, padding: 20, gap: 16 },
     title: { fontSize: 22, fontWeight: "600", marginBottom: 10 },
-    input: {
-        borderWidth: 1,
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-    },
-    btn: {
-        padding: 14,
-        borderRadius: 10,
-        alignItems: "center",
-        marginTop: 20,
-    },
+    input: { borderWidth: 1, borderRadius: 8, padding: 12, fontSize: 16 },
+    btn: { padding: 14, borderRadius: 10, alignItems: "center", marginTop: 20 },
+
     pickerBox: {
         borderWidth: 1,
         borderRadius: 8,
@@ -304,15 +302,23 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
     },
+
     label: { fontSize: 14, marginRight: 8 },
 
-    // 📱 iOS inline picker
+    switchRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingVertical: 10,
+    },
+
     iosPickerContainer: {
         marginVertical: 8,
         backgroundColor: "#fff",
         borderRadius: 8,
         padding: 10,
     },
+
     doneButton: {
         alignSelf: "flex-end",
         backgroundColor: "#000",
@@ -326,7 +332,6 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     },
 
-    // 📱 Android modal
     modalOverlay: {
         flex: 1,
         justifyContent: "center",

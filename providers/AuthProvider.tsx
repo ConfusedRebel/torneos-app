@@ -58,7 +58,7 @@ export default function AuthProvider({ children }: Props) {
       }
 
       const userId = currentSession.user.id;
-
+      console.log(userId)
       // 🧩 Verificar si es administrador
       const { data: adminData } = await supabase
         .from("administradores")
@@ -83,7 +83,9 @@ export default function AuthProvider({ children }: Props) {
       if (jugadorData) {
         setRol("jugador");
         setJugador(jugadorData);
-      } else {
+      } 
+      
+      else {
         // Si no está en ninguna tabla, cerrar sesión
         await signOut();
       }

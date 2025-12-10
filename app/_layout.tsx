@@ -1,17 +1,18 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Linking from 'expo-linking';
 import SpaceMono from '../assets/fonts/SpaceMono-Regular.ttf';
 import Constants from "expo-constants";
 
 import { useColorScheme } from '@/components/useColorScheme';
 
-// 🔹 Tus providers
+// Providers
 import AuthProvider from '@/providers/AuthProvider';
 import { TorneosProvider } from '@/providers/torneosProvider';
 import { PartidosProvider } from '@/providers/partidosProvider';
@@ -24,7 +25,6 @@ export const unstable_settings = {
   initialRouteName: '(tabs)',
 };
 
-// Evita que el splash se oculte antes de tiempo
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -32,6 +32,35 @@ export default function RootLayout() {
     SpaceMono,
     ...FontAwesome.font,
   });
+
+  // ----------------------------
+  // 🔥 DEEP LINKING SUPABASE
+  // ----------------------------
+  useEffect(() => {
+    const handleDeepLink = ( event ) => {
+      const { url } = event;
+      const data = Linking.parse(url);
+
+      console.log("Deep link recibido: ", data);
+
+      const type = data.queryParams?.type;
+      const token = data.queryParams?.token;
+
+      if (type === "recovery") {
+        router.push(`//reset/password?token=${token}`);
+      }
+
+      if (type === "signup") {
+        router.push('email-confirmed');
+      }
+    };
+
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+    return () => subscription.remove();
+  }, []);
+  // ----------------------------
+  // END DEEP LINKING
+  // ----------------------------
 
   useEffect(() => {
     if (error) throw error;
@@ -62,25 +91,13 @@ function RootLayoutNav() {
               <EquiposProvider>
                 <JugadoresProvider>
                   <Stack screenOptions={{ animation: 'simple_push' }}>
-                    <Stack.Screen
-                      name="(auth)/signin/index"
-                      options={{
-                        headerShown: false,
-                        animation: 'ios_from_right',
-                        gestureEnabled: false,
-                      }}
-                    />
-                    <Stack.Screen
-                      name="(auth)/signup/index"
-                      options={{
-                        headerShown: false,
-                        animation: 'ios_from_right',
-                        gestureEnabled: false,
-                      }}
-                    />
+                    <Stack.Screen name="(auth)/signin/index" options={{ headerShown: false }} />
+                    <Stack.Screen name="(auth)/signup/index" options={{ headerShown: false }} />
+                    <Stack.Screen name="(auth)/reset/password" options={{ headerShown: false }} />
                     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                     <Stack.Screen name="config" options={{ title: 'Configuración' }} />
                     <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+                    <Stack.Screen name="(auth)/email-confirmed" options={{ headerShown: false }} />
                   </Stack>
                 </JugadoresProvider>
               </EquiposProvider>
@@ -88,6 +105,6 @@ function RootLayoutNav() {
           </TorneosProvider>
         </AuthProvider>
       </ThemeProvider>
-    </GestureHandlerRootView >
+    </GestureHandlerRootView>
   );
 }

@@ -2,7 +2,17 @@ import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Link, router } from "expo-router";
 import { z } from "zod";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, type TextInputProps, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  type TextInputProps,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +22,6 @@ import { TEXT_STYLES } from "@/constants/Text";
 const signUpSchema = z.object({
   nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   apellido: z.string().min(2, "El apellido debe tener al menos 2 caracteres"),
-  edad: z.coerce.number().int().min(10, "Edad mínima 10 años"),
   email: z.string().email("Correo electrónico inválido"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 });
@@ -33,200 +42,222 @@ export default function SignUp() {
 
   // 🧩 Registro
   const onSubmit = async (data: SignUpForm) => {
+    console.log("📨 Datos enviados desde el form:", data);
+
     try {
       setLoading(true);
       setError(null);
 
-      // 1️⃣ Crear usuario en Supabase Auth
+      // 1️⃣ Crear usuario en Supabase Auth (con metadata)
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
+        options: {
+          data: {
+            nombre: data.nombre,
+            apellido: data.apellido,
+          },
+          // Si ya tenés deep link configurado, acá podrías poner redirect:
+          // emailRedirectTo: "tuapp://auth/callback",
+        },
       });
-      if (signUpError) throw signUpError;
+
+      console.log("🔍 signUpData:", signUpData);
+      console.log("🔍 signUpError:", signUpError);
+
+      if (signUpError) {
+        console.log("❌ Error en signUp:", signUpError.message);
+        throw signUpError;
+      }
 
       const user = signUpData.user;
-      if (!user) throw new Error("No se pudo obtener el usuario");
+      console.log("🆔 User recibido después del signUp:", user);
 
-      // 2️⃣ Insertar en la tabla jugadores
-      const { error: insertError } = await supabase.from("jugadores").insert([
-        {
-          user_id: user.id,
-          nombre: data.nombre,
-          apellido: data.apellido,
-          edad: data.edad,
-          email: data.email,
-          ranking_paddle: 0,
-          ranking_tennis: 0,
-        },
-      ]);
-      if (insertError) throw insertError;
+      if (!user) {
+        console.log("❌ ERROR: signUpData.user es null!");
+        throw new Error("No se pudo obtener el usuario al registrarse.");
+      }
 
-      // 3️⃣ Auto login opcional
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-      if (loginError) throw loginError;
+      // ❌ IMPORTANTÍSIMO:
+      // YA NO intentamos insertar en la tabla jugadores desde el cliente.
+      // Eso lo hará la Edge Function cuando se confirme el email.
 
-      router.replace("/");
+      // 2️⃣ Aviso al usuario
+      alert("Revisa tu email para confirmar tu cuenta.");
+      console.log("✅ Registro completado correctamente (esperando confirmación de email)");
+
+      router.replace("/(auth)/signin");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ha ocurrido un error");
+      if (err instanceof Error) {
+        console.log("❌ ERROR FINAL:", err.message);
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.container}>
-            <Text style={[TEXT_STYLES.hero, styles.title]}>¡Registra tu cuenta!</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.container}>
+          <Text style={[TEXT_STYLES.hero, styles.title]}>¡Registra tu cuenta!</Text>
 
-            <View style={styles.form}>
-              {/* Nombre */}
-              <Controller
-                control={control}
-                name="nombre"
-                render={({ field: { onChange, value } }) => (
-                  <InputField
-                    label="Nombre"
-                    icon="person-outline"
-                    placeholder="María"
-                    value={value}
-                    onChangeText={onChange}
-                    error={errors.nombre?.message}
-                  />
-                )}
-              />
+          <View style={styles.form}>
+            {/* Nombre */}
+            <Controller
+              control={control}
+              name="nombre"
+              render={({ field: { onChange, value } }) => (
+                <InputField
+                  label="Nombre"
+                  icon="person-outline"
+                  placeholder="María"
+                  value={value}
+                  onChangeText={onChange}
+                  error={errors.nombre?.message}
+                />
+              )}
+            />
 
-              {/* Apellido */}
-              <Controller
-                control={control}
-                name="apellido"
-                render={({ field: { onChange, value } }) => (
-                  <InputField
-                    label="Apellido"
-                    icon="person-outline"
-                    placeholder="Gonzáles"
-                    value={value}
-                    onChangeText={onChange}
-                    error={errors.apellido?.message}
-                  />
-                )}
-              />
-              {/* Correo */}
-              <Controller
-                control={control}
-                name="email"
-                render={({ field: { onChange, value } }) => (
-                  <InputField
-                    label="Correo electrónico"
-                    icon="mail-outline"
-                    placeholder="gonzales@gmail.com"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    value={value}
-                    onChangeText={onChange}
-                    error={errors.email?.message}
-                  />
-                )}
-              />
+            {/* Apellido */}
+            <Controller
+              control={control}
+              name="apellido"
+              render={({ field: { onChange, value } }) => (
+                <InputField
+                  label="Apellido"
+                  icon="person-outline"
+                  placeholder="Gonzáles"
+                  value={value}
+                  onChangeText={onChange}
+                  error={errors.apellido?.message}
+                />
+              )}
+            />
 
-              {/* Contraseña */}
-              <Controller
-                control={control}
-                name="password"
-                render={({ field: { onChange, value } }) => (
-                  <InputField
-                    label="Contraseña"
-                    icon="lock-closed-outline"
-                    placeholder="********"
-                    secureTextEntry
-                    value={value}
-                    onChangeText={onChange}
-                    error={errors.password?.message}
-                  />
-                )}
-              />
+            {/* Correo */}
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, value } }) => (
+                <InputField
+                  label="Correo electrónico"
+                  icon="mail-outline"
+                  placeholder="gonzales@gmail.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={value}
+                  onChangeText={onChange}
+                  error={errors.email?.message}
+                />
+              )}
+            />
 
-              {/* Botón */}
-              <TouchableOpacity
-                style={[styles.button, loading && { opacity: 0.6 }]}
-                onPress={handleSubmit(onSubmit)}
-                disabled={loading}
-              >
-                <Text style={[TEXT_STYLES.button, styles.buttonText]}>
-                  {loading ? "Registrando..." : "Registrarse"}
-                </Text>
-              </TouchableOpacity>
+            {/* Contraseña */}
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, value } }) => (
+                <InputField
+                  label="Contraseña"
+                  icon="lock-closed-outline"
+                  placeholder="********"
+                  secureTextEntry
+                  value={value}
+                  onChangeText={onChange}
+                  error={errors.password?.message}
+                />
+              )}
+            />
 
-              {/* Términos */}
-              <View style={styles.termsContainer}>
-                <Text style={[TEXT_STYLES.body, styles.termsText]}>
-                  Al crear una cuenta, aceptas nuestros{" "}
+            {/* Botón */}
+            <TouchableOpacity
+              style={[styles.button, loading && { opacity: 0.6 }]}
+              onPress={handleSubmit(onSubmit)}
+              disabled={loading}
+            >
+              <Text style={[TEXT_STYLES.button, styles.buttonText]}>
+                {loading ? "Registrando..." : "Registrarse"}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Términos */}
+            <View style={styles.termsContainer}>
+              <Text style={[TEXT_STYLES.body, styles.termsText]}>
+                Al crear una cuenta, aceptas nuestros{" "}
+                <Text style={[TEXT_STYLES.bodyBold, styles.linkText]}>
+                  Términos y Condiciones
+                </Text>.
+              </Text>
+            </View>
+
+            {/* Error */}
+            {error && <Text style={[TEXT_STYLES.body, styles.errorText]}>{error}</Text>}
+
+            {/* Footer */}
+            <View style={styles.footer}>
+              <Text style={[TEXT_STYLES.body, styles.footerText]}>
+                ¿Ya tienes una cuenta?{" "}
+                <Link href="/(auth)/signin">
                   <Text style={[TEXT_STYLES.bodyBold, styles.linkText]}>
-                    Términos y Condiciones
-                  </Text>.
-                </Text>
-              </View>
-
-              {/* Error */}
-              {error && <Text style={[TEXT_STYLES.body, styles.errorText]}>{error}</Text>}
-
-              {/* Footer */}
-              <View style={styles.footer}>
-                <Text style={[TEXT_STYLES.body, styles.footerText]}>
-                  ¿Ya tienes una cuenta?{" "}
-                  <Link href="/(auth)/signin">
-                    <Text style={[TEXT_STYLES.bodyBold, styles.linkText]}>
-                      Iniciar sesión
-                    </Text>
-                  </Link>
-                </Text>
-              </View>
+                    Iniciar sesión
+                  </Text>
+                </Link>
+              </Text>
             </View>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
-// ✅ InputField — componente reutilizable
+// --------------------------------------------
+// COMPONENTE InputField
+// --------------------------------------------
+
 type InputFieldProps = {
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
   error?: string;
 } & TextInputProps;
 
-function InputField({
-  label,
-  icon,
-  error,
-  ...props
-}: InputFieldProps) {
+function InputField({ label, icon, error, ...props }: InputFieldProps) {
   return (
     <View style={styles.inputContainer}>
       <Text style={[TEXT_STYLES.body, styles.inputLabel]}>{label}</Text>
-      <View style={[styles.inputWrapper, error && { borderColor: "#dc2626", borderWidth: 1 }]}>
+      <View
+        style={[
+          styles.inputWrapper,
+          error && { borderColor: "#dc2626", borderWidth: 1 },
+        ]}
+      >
         <Ionicons name={icon} size={20} color="#666" style={styles.inputIcon} />
-        <TextInput style={[TEXT_STYLES.body, styles.input]} placeholderTextColor="#999" {...props} />
+        <TextInput
+          style={[TEXT_STYLES.body, styles.input]}
+          placeholderTextColor="#999"
+          {...props}
+        />
       </View>
-      {error && <Text style={[TEXT_STYLES.footnote, styles.inputErrorText]}>{error}</Text>}
+      {error && (
+        <Text style={[TEXT_STYLES.footnote, styles.inputErrorText]}>
+          {error}
+        </Text>
+      )}
     </View>
   );
 }
 
-// ✅ Estilos
+// --------------------------------------------
+// ESTILOS
+// --------------------------------------------
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#f5f5f5" },
   container: { flex: 1, padding: 24, justifyContent: "center" },
   title: { color: "#000", marginBottom: 8 },
-  subtitle: { color: "#666", marginBottom: 32 },
   form: { gap: 18 },
   inputContainer: { gap: 6 },
   inputLabel: { color: "#333" },
@@ -240,7 +271,13 @@ const styles = StyleSheet.create({
   },
   inputIcon: { marginRight: 12 },
   input: { flex: 1, color: "#000" },
-  button: { backgroundColor: "#000", borderRadius: 12, height: 48, justifyContent: "center", alignItems: "center" },
+  button: {
+    backgroundColor: "#000",
+    borderRadius: 12,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   buttonText: { color: "#fff" },
   termsContainer: { marginTop: 10 },
   termsText: { color: "#666", lineHeight: 20 },

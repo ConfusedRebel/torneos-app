@@ -7,7 +7,8 @@ export default {
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: "torneosapp",
+    scheme: "appcrawl",
+    deepLinks: true,
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     splash: {
@@ -19,6 +20,20 @@ export default {
       supportsTablet: true,
     },
     android: {
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "appcrawl"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#ffffff",
