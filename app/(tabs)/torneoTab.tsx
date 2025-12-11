@@ -16,7 +16,7 @@ import { TEXT_STYLES } from "@/constants/Text";
 import { Picker } from "@react-native-picker/picker";
 import { useAuth } from "@/providers/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
-import type { Tables } from "@/types/supabase"; // ✅ Supabase generated types
+import type { Tables } from "@/types/supabase";
 
 type Torneo = Tables<"torneos">;
 
@@ -24,10 +24,11 @@ type EstadoFilter = "all" | "pendiente" | "en_curso" | "finalizado";
 type ModalidadFilter = "all" | "single" | "doble";
 type DeporteFilter = "all" | "paddle" | "tennis";
 
-function capitalize(str : string) {
+function capitalize(str: string) {
   if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
+
 export default function TorneosTab() {
   const { colors } = useTheme();
   const { list } = useTorneos();
@@ -49,7 +50,6 @@ export default function TorneosTab() {
   const [modalidad, setModalidad] = useState<ModalidadFilter>("all");
   const [deporte, setDeporte] = useState<DeporteFilter>("all");
 
-  // ✅ updated to match new dynamic route /torneos/[id]
   const openTorneo = (id_torneo: string) => {
     router.push(`/torneos/${id_torneo}`);
   };
@@ -68,16 +68,24 @@ export default function TorneosTab() {
 
         const data = await list(params);
 
-        // Client-side filters
         let filtered = data;
+
+        // 🔹 Modalidad
         if (modalidad !== "all") {
-          filtered = filtered.filter((t) => (modalidad === "doble" ? t.duo : !t.duo));
+          filtered = filtered.filter((t) =>
+            modalidad === "doble" ? t.duo : !t.duo
+          );
         }
+
+        // 🔹 Deporte
         if (deporte !== "all") {
           filtered = filtered.filter(
             (t) => t.deporte?.toLowerCase() === deporte.toLowerCase()
           );
         }
+
+        // ⭐ ORDENAR: torneos de club primero (único cambio solicitado)
+        filtered.sort((a, b) => Number(b.club) - Number(a.club));
 
         setTorneos(filtered);
       } catch (err) {
@@ -93,7 +101,7 @@ export default function TorneosTab() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* 🔍 Search Bar */}
-      <RNView style={[styles.filterBar, { marginBottom: 5 }]}> 
+      <RNView style={[styles.filterBar, { marginBottom: 5 }]}>
         <TextInput
           value={query}
           onChangeText={setQuery}
@@ -114,7 +122,9 @@ export default function TorneosTab() {
           onPress={() => setQuery("")}
           style={[styles.clearBtn, { borderColor: colors.border }]}
         >
-          <Text style={[TEXT_STYLES.captionBold, { color: colors.text }]}>✕</Text>
+          <Text style={[TEXT_STYLES.captionBold, { color: colors.text }]}>
+            ✕
+          </Text>
         </TouchableOpacity>
       </RNView>
 
@@ -128,7 +138,13 @@ export default function TorneosTab() {
               { borderColor: colors.border, backgroundColor: colors.card },
             ]}
           >
-            <Text style={[TEXT_STYLES.caption, styles.filterLabel, { color: colors.text }]}>
+            <Text
+              style={[
+                TEXT_STYLES.caption,
+                styles.filterLabel,
+                { color: colors.text },
+              ]}
+            >
               {estado === "pendiente"
                 ? "Pendiente"
                 : estado === "en_curso"
@@ -157,8 +173,14 @@ export default function TorneosTab() {
               { borderColor: colors.border, backgroundColor: colors.card },
             ]}
           >
-            <Text style={[TEXT_STYLES.caption, styles.filterLabel, { color: colors.text }]}>
-              {modalidad == "all"? "Todos" : capitalize(modalidad)}
+            <Text
+              style={[
+                TEXT_STYLES.caption,
+                styles.filterLabel,
+                { color: colors.text },
+              ]}
+            >
+              {modalidad == "all" ? "Todos" : capitalize(modalidad)}
             </Text>
             <Picker
               selectedValue={modalidad}
@@ -179,8 +201,14 @@ export default function TorneosTab() {
               { borderColor: colors.border, backgroundColor: colors.card },
             ]}
           >
-            <Text style={[TEXT_STYLES.caption, styles.filterLabel, { color: colors.text }]}>
-              {deporte == "all"? "Todos" : capitalize(deporte)}
+            <Text
+              style={[
+                TEXT_STYLES.caption,
+                styles.filterLabel,
+                { color: colors.text },
+              ]}
+            >
+              {deporte == "all" ? "Todos" : capitalize(deporte)}
             </Text>
             <Picker
               selectedValue={deporte}
@@ -224,7 +252,7 @@ export default function TorneosTab() {
         />
       )}
 
-      {/* ➕ FAB visible only for admin */}
+      {/* ➕ FAB only admin */}
       {rol === "admin" && (
         <TouchableOpacity
           onPress={() => router.push("/torneos/createTorneo")}

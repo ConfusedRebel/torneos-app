@@ -16,6 +16,7 @@ import { useTorneos } from "@/providers/torneosProvider";
 import type { Tables } from "@/types/supabase";
 import { useTheme } from "@/hooks/useTheme";
 import { TEXT_STYLES } from "@/constants/Text";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Jugador = Tables<"jugadores">;
 
@@ -26,6 +27,7 @@ export default function CreateEquipo() {
     const { list } = useJugadores();
     const { createEquipo } = useEquipos();
     const { get } = useTorneos();
+    const insets = useSafeAreaInsets();
 
     const [torneoDuo, setTorneoDuo] = useState<boolean>(false);
 
@@ -162,7 +164,15 @@ export default function CreateEquipo() {
             {loading ? (
                 <ActivityIndicator size="large" color={colors.tint} />
             ) : (
-                <ScrollView style={{ flex: 1 }}>
+                <ScrollView
+                    contentContainerStyle={[
+                        styles.container,
+                        {
+                            backgroundColor: colors.background,
+                            paddingBottom: insets.bottom + 40,
+                        },
+                    ]}
+                >
                     {jugadores.length === 0 ? (
                         <Text style={{ color: colors.text }}>No hay coincidencias.</Text>
                     ) : (

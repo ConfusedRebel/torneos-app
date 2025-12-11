@@ -313,6 +313,7 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
         paddingVertical: 10,
+        minHeight: 48,
     },
 
     iosPickerContainer: { marginVertical: 8, borderRadius: 8, padding: 10 },

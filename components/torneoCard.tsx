@@ -36,11 +36,6 @@ function TorneoCardBase({ torneo, onPress, style, isClub }: Props) {
       accessibilityLabel={`Abrir ${torneo.nombre}`}
     >
       <View>
-        {isClub && (
-          <View style={[styles.badge, { backgroundColor: colors.tint, borderColor: cardBorder }]}> 
-            <Text style={[TEXT_STYLES.captionBold, { color: colors.onTint }]}>Club</Text>
-          </View>
-        )}
         <Text
           style={[TEXT_STYLES.title, { color: colors.text, backgroundColor: cardBackground }]}
         >
